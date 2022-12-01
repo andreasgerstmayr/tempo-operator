@@ -7,7 +7,9 @@ import (
 	"github.com/os-observability/tempo-operator/apis/tempo/v1alpha1"
 )
 
-const requestsPercentage = 0.3
+const (
+	requestsPercentage = 0.3
+)
 
 type componentResource struct {
 	memory float32
@@ -57,4 +59,12 @@ func Resources(tempo v1alpha1.Microservices, component string) corev1.ResourceRe
 		resources.Requests[corev1.ResourceMemory] = *resource.NewQuantity(int64(mem*0.3), resource.BinarySI)
 	}
 	return resources
+}
+
+func Ballast(tempo v1alpha1.Microservices, component string) int {
+	val, ok := tempo.Spec.Perf.Ballast[component]
+	if ok {
+		return val
+	}
+	return 0
 }

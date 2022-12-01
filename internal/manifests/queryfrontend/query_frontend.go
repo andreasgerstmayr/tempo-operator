@@ -1,6 +1,8 @@
 package queryfrontend
 
 import (
+	"fmt"
+
 	v1 "k8s.io/api/apps/v1"
 
 	corev1 "k8s.io/api/core/v1"
@@ -107,7 +109,7 @@ func deployment(tempo v1alpha1.Microservices) (*v1.Deployment, error) {
 							Args: []string{
 								"-target=query-frontend",
 								"-config.file=/conf/tempo.yaml",
-								"-mem-ballast-size-mbs=1024",
+								fmt.Sprintf("-mem-ballast-size-mbs=%d", manifestutils.Ballast(tempo, componentName)),
 							},
 							Ports: []corev1.ContainerPort{
 								{

@@ -10,6 +10,8 @@ import (
 
 // MicroservicesSpec defines the desired state of Microservices.
 type MicroservicesSpec struct {
+	Perf PerfSpec `json:"perf,omitempty"`
+
 	// Images defines the image for each container.
 	//
 	// +optional
@@ -101,6 +103,10 @@ type MicroservicesList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []Microservices `json:"items"`
+}
+
+type PerfSpec struct {
+	Ballast map[string]int `json:"ballast,omitempty"`
 }
 
 // ImagesSpec defines the image for each container.

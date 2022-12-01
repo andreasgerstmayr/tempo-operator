@@ -1,6 +1,8 @@
 package querier
 
 import (
+	"fmt"
+
 	v1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -65,7 +67,11 @@ func deployment(tempo v1alpha1.Microservices) (*v1.Deployment, error) {
 						{
 							Name:  "tempo",
 							Image: tempo.Spec.Images.Tempo,
-							Args:  []string{"-target=querier", "-config.file=/conf/tempo.yaml"},
+							Args: []string{
+								"-target=querier",
+								"-config.file=/conf/tempo.yaml",
+								fmt.Sprintf("-mem-ballast-size-mbs=%d", manifestutils.Ballast(tempo, componentName)),
+							},
 							Ports: []corev1.ContainerPort{
 								{
 									Name:          httpPortName,
