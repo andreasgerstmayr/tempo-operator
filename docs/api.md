@@ -98,6 +98,13 @@ MicroservicesSpec defines the desired state of Microservices.
         </td>
         <td>false</td>
       </tr><tr>
+        <td><b><a href="#microservicesspecperf">perf</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b>replicationFactor</b></td>
         <td>integer</td>
         <td>
@@ -451,6 +458,33 @@ Query is used to define query rate limits.
         <td>integer</td>
         <td>
           MaxSearchBytesPerTrace defines the maximum size of search data for a single trace in bytes. default: `0` to disable.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Microservices.spec.perf
+<sup><sup>[↩ Parent](#microservicesspec)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>ballast</b></td>
+        <td>map[string]integer</td>
+        <td>
+          <br/>
         </td>
         <td>false</td>
       </tr></tbody>

@@ -128,6 +128,13 @@ spec:
                     description: PerTenant is used to define rate limits per tenant.
                     type: object
                 type: object
+              perf:
+                properties:
+                  ballast:
+                    additionalProperties:
+                      type: integer
+                    type: object
+                type: object
               replicationFactor:
                 description: 'NOTE: currently this field is not considered. ReplicationFactor
                   is used to define how many component replicas should exist.'

@@ -81,7 +81,7 @@ func TestBuildDistributor(t *testing.T) {
 							Args: []string{
 								"-target=distributor",
 								"-config.file=/conf/tempo.yaml",
-								"-mem-ballast-size-mbs=1024",
+								"-mem-ballast-size-mbs=0",
 							},
 							VolumeMounts: []corev1.VolumeMount{
 								{

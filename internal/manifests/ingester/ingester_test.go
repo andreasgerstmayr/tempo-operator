@@ -87,7 +87,7 @@ func TestBuildIngester(t *testing.T) {
 							Args: []string{
 								"-target=ingester",
 								"-config.file=/conf/tempo.yaml",
-								"-mem-ballast-size-mbs=1024",
+								"-mem-ballast-size-mbs=0",
 								"--storage.trace.s3.secret_key=$(S3_SECRET_KEY)",
 								"--storage.trace.s3.access_key=$(S3_ACCESS_KEY)",
 							},
