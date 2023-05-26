@@ -2,6 +2,7 @@ package upgrade
 
 import (
 	"github.com/Masterminds/semver/v3"
+
 	"github.com/os-observability/tempo-operator/apis/tempo/v1alpha1"
 )
 
@@ -14,7 +15,7 @@ type versionUpgrade struct {
 
 var (
 	// List of all operator versions requiring "manual" upgrade steps
-	// This list needs to be sorted by the version ascending
+	// This list needs to be sorted by the version ascending.
 	upgrades = []versionUpgrade{
 		{
 			version: *semver.MustParse("0.1.0"),

@@ -4,15 +4,16 @@ import (
 	"context"
 	"testing"
 
-	configv1alpha1 "github.com/os-observability/tempo-operator/apis/config/v1alpha1"
-	"github.com/os-observability/tempo-operator/apis/tempo/v1alpha1"
-	"github.com/os-observability/tempo-operator/internal/version"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/record"
 	"sigs.k8s.io/controller-runtime/pkg/log"
+
+	configv1alpha1 "github.com/os-observability/tempo-operator/apis/config/v1alpha1"
+	"github.com/os-observability/tempo-operator/apis/tempo/v1alpha1"
+	"github.com/os-observability/tempo-operator/internal/version"
 )
 
 var logger = log.Log.WithName("unit-tests")

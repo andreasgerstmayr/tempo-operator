@@ -10,13 +10,15 @@ import (
 
 	"github.com/Masterminds/semver/v3"
 	"github.com/go-logr/logr"
+	"k8s.io/client-go/tools/record"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+
 	configv1alpha1 "github.com/os-observability/tempo-operator/apis/config/v1alpha1"
 	"github.com/os-observability/tempo-operator/apis/tempo/v1alpha1"
 	"github.com/os-observability/tempo-operator/internal/version"
-	"k8s.io/client-go/tools/record"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+// Upgrade contains required objects to perform version upgrades.
 type Upgrade struct {
 	Client     client.Client
 	Recorder   record.EventRecorder
@@ -25,7 +27,7 @@ type Upgrade struct {
 	Log        logr.Logger
 }
 
-// TempoStacks upgrades all TempoStacks in the cluster
+// TempoStacks upgrades all TempoStacks in the cluster.
 func (u Upgrade) TempoStacks(ctx context.Context) error {
 	u.Log.Info("looking for instances to upgrade")
 
@@ -129,7 +131,7 @@ func (u Upgrade) TempoStack(ctx context.Context, tempo v1alpha1.TempoStack) (v1a
 	return tempo, nil
 }
 
-// updateTempoStackImages updates all images with the default images of the operator configuration
+// updateTempoStackImages updates all images with the default images of the operator configuration.
 func updateTempoStackImages(u Upgrade, tempo *v1alpha1.TempoStack) {
 	tempo.Spec.Images.Tempo = u.CtrlConfig.DefaultImages.Tempo
 	tempo.Spec.Images.TempoQuery = u.CtrlConfig.DefaultImages.TempoQuery
