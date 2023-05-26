@@ -1,0 +1,7 @@
+apiVersion: kuttl.dev/v1beta1
+kind: TestSuite
+testDirs:
+  - ./tests/upgrade/
+timeout: 150
+parallel: 1  # the test restarts the operator to trigger the upgrade procedure
+namespace: default

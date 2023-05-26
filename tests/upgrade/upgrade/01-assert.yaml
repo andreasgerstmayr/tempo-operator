@@ -1,0 +1,53 @@
+apiVersion: tempo.grafana.com/v1alpha1
+kind: TempoStack
+metadata:
+  name: simplest
+spec:
+  images:
+    tempo: docker.io/grafana/tempo:0.0.0
+    tempoGateway: quay.io/observatorium/api:0.0.0
+    tempoGatewayOpa: quay.io/observatorium/opa-openshift:0.0.0
+    tempoQuery: docker.io/grafana/tempo-query:0.0.0
+status:
+  operatorVersion: 0.0.0
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tempo-simplest-compactor
+spec:
+  template:
+    spec:
+      containers:
+      - image: docker.io/grafana/tempo:0.0.0
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tempo-simplest-distributor
+spec:
+  template:
+    spec:
+      containers:
+      - image: docker.io/grafana/tempo:0.0.0
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tempo-simplest-querier
+spec:
+  template:
+    spec:
+      containers:
+      - image: docker.io/grafana/tempo:0.0.0
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tempo-simplest-query-frontend
+spec:
+  template:
+    spec:
+      containers:
+      - image: docker.io/grafana/tempo:0.0.0
+      - image: docker.io/grafana/tempo-query:0.0.0

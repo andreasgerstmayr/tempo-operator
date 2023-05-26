@@ -1,0 +1,5 @@
+apiVersion: kuttl.dev/v1beta1
+kind: TestStep
+commands:
+# delete the tempo-operator pod (in any namespace) to trigger the upgrade process
+- command: kubectl delete -A pod -lapp.kubernetes.io/name=tempo-operator,control-plane=controller-manager

@@ -1,0 +1,8 @@
+apiVersion: kuttl.dev/v1beta1
+kind: TestStep
+commands:
+# wait until the operator upgrade procedure is finished
+- command: /bin/sh -c "while [ $(kubectl get --namespace $NAMESPACE tempo simplest -o=jsonpath='{.status.operatorVersion}') = 0.0.0 ]; do sleep 1; done"
+
+# at time of writing this test, the current operator version is not known, therefore just make sure it's not the same as the initial version
+- command: /bin/sh -c "kubectl get --namespace $NAMESPACE deployment tempo-simplest-distributor -o=jsonpath='{.spec.template.spec.containers[0].image}' | grep -v :0.0.0"

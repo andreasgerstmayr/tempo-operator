@@ -1,0 +1,6 @@
+apiVersion: kuttl.dev/v1beta1
+kind: TestStep
+commands:
+# kuttl doesn't set values of the status subresource
+- command: kubectl patch tempo simplest --subresource=status --type='merge' -p '{"status":{"operatorVersion":"0.0.0"}}'
+  namespaced: true

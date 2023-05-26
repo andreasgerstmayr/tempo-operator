@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: Secret
+metadata:
+   name: minio-test
+stringData:
+  endpoint: http://minio.minio.svc:9000
+  bucket: tempo
+  access_key_id: tempo
+  access_key_secret: supersecret
+type: Opaque
+---
+apiVersion: tempo.grafana.com/v1alpha1
+kind: TempoStack
+metadata:
+  name: simplest
+spec:
+  images:
+    tempo: docker.io/grafana/tempo:0.0.0
+    tempoGateway: quay.io/observatorium/api:0.0.0
+    tempoGatewayOpa: quay.io/observatorium/opa-openshift:0.0.0
+    tempoQuery: docker.io/grafana/tempo-query:0.0.0
+  storage:
+    secret:
+      name: minio-test
+      type: s3
+  storageSize: 200M
+  template:
+    queryFrontend:
+      jaegerQuery:
+        enabled: true
