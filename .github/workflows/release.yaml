@@ -22,7 +22,9 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         OPERATOR_VERSION=$(git describe --tags)
+        awk '/^## / {s++} s == 1 && !/^## / {print}' CHANGELOG.md > RELEASE_NOTES.md
         gh release create \
             -t "Release ${OPERATOR_VERSION}" \
+            -F RELEASE_NOTES.md \
             "${OPERATOR_VERSION}" \
             'dist/tempo-operator.yaml#Installation manifest for Kubernetes' \
