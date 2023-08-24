@@ -256,10 +256,6 @@ func deployment(params manifestutils.Params) (*v1.Deployment, error) {
 		d.Spec.Template.Spec.Volumes = append(d.Spec.Template.Spec.Volumes, jaegerQueryVolume)
 	}
 
-	err := manifestutils.ConfigureStorage(tempo, &d.Spec.Template.Spec)
-	if err != nil {
-		return nil, err
-	}
 	return d, nil
 }
 
