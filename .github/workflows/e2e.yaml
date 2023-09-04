@@ -2,9 +2,6 @@ name: "End-to-end tests"
 
 on:
   push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
@@ -39,7 +36,7 @@ jobs:
       uses: mxschmitt/action-tmate@v3
       with:
         detached: true
-        
+
     - name: "run tests"
       env:
         KUBE_VERSION: ${{ matrix.kube-version }}
