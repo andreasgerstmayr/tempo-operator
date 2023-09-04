@@ -35,6 +35,11 @@ jobs:
     - name: "install kuttl"
       run: ./hack/install/install-kuttl.sh
 
+    - name: Setup tmate session
+      uses: mxschmitt/action-tmate@v3
+      with:
+        detached: true
+        
     - name: "run tests"
       env:
         KUBE_VERSION: ${{ matrix.kube-version }}
