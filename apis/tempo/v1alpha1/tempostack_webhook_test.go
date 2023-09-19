@@ -13,7 +13,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/validation/field"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/grafana/tempo-operator/apis/config/v1alpha1"
@@ -105,10 +105,10 @@ func TestDefault(t *testing.T) {
 					},
 					Template: TempoTemplateSpec{
 						Distributor: TempoComponentSpec{
-							Replicas: pointer.Int32(1),
+							Replicas: ptr.To(int32(1)),
 						},
 						Ingester: TempoComponentSpec{
-							Replicas: pointer.Int32(1),
+							Replicas: ptr.To(int32(1)),
 						},
 					},
 				},
@@ -157,10 +157,10 @@ func TestDefault(t *testing.T) {
 					},
 					Template: TempoTemplateSpec{
 						Distributor: TempoComponentSpec{
-							Replicas: pointer.Int32(1),
+							Replicas: ptr.To(int32(1)),
 						},
 						Ingester: TempoComponentSpec{
-							Replicas: pointer.Int32(1),
+							Replicas: ptr.To(int32(1)),
 						},
 					},
 				},
@@ -214,10 +214,10 @@ func TestDefault(t *testing.T) {
 					},
 					Template: TempoTemplateSpec{
 						Distributor: TempoComponentSpec{
-							Replicas: pointer.Int32(1),
+							Replicas: ptr.To(int32(1)),
 						},
 						Ingester: TempoComponentSpec{
-							Replicas: pointer.Int32(1),
+							Replicas: ptr.To(int32(1)),
 						},
 						QueryFrontend: TempoQueryFrontendSpec{
 							JaegerQuery: JaegerQuerySpec{
@@ -437,7 +437,7 @@ func TestValidateReplicationFactor(t *testing.T) {
 					ReplicationFactor: 3,
 					Template: TempoTemplateSpec{
 						Ingester: TempoComponentSpec{
-							Replicas: pointer.Int32(2),
+							Replicas: ptr.To(int32(2)),
 						},
 					},
 				},
@@ -451,7 +451,7 @@ func TestValidateReplicationFactor(t *testing.T) {
 					ReplicationFactor: 3,
 					Template: TempoTemplateSpec{
 						Ingester: TempoComponentSpec{
-							Replicas: pointer.Int32(3),
+							Replicas: ptr.To(int32(3)),
 						},
 					},
 				},
@@ -465,7 +465,7 @@ func TestValidateReplicationFactor(t *testing.T) {
 					ReplicationFactor: 3,
 					Template: TempoTemplateSpec{
 						Ingester: TempoComponentSpec{
-							Replicas: pointer.Int32(1),
+							Replicas: ptr.To(int32(1)),
 						},
 					},
 				},
