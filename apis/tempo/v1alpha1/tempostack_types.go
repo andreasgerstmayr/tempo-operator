@@ -57,7 +57,7 @@ type TempoStackSpec struct {
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Storage size for PVCs"
 	StorageSize resource.Quantity `json:"storageSize,omitempty"`
 
-	// Images defines the image for each container.
+	// DEPRECATED. Images defines the image for each container.
 	//
 	// +optional
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Container Images"

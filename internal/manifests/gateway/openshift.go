@@ -194,9 +194,9 @@ func patchOCPServiceAccount(tempo v1alpha1.TempoStack, dep *v1.Deployment) *v1.D
 	return dep
 }
 
-func patchOCPOPAContainer(tempo v1alpha1.TempoStack, dep *v1.Deployment) (*v1.Deployment, error) {
+func patchOCPOPAContainer(params manifestutils.Params, dep *v1.Deployment) (*v1.Deployment, error) {
 	pod := corev1.PodSpec{
-		Containers: []corev1.Container{opaContainer(tempo)},
+		Containers: []corev1.Container{opaContainer(params)},
 	}
 	err := mergo.Merge(&dep.Spec.Template.Spec, pod, mergo.WithAppendSlice)
 	if err != nil {
@@ -205,7 +205,8 @@ func patchOCPOPAContainer(tempo v1alpha1.TempoStack, dep *v1.Deployment) (*v1.De
 	return dep, err
 }
 
-func opaContainer(tempo v1alpha1.TempoStack) corev1.Container {
+func opaContainer(params manifestutils.Params) corev1.Container {
+	tempo := params.Tempo
 	var args = []string{
 		"--log.level=warn",
 		"--opa.admin-groups=system:cluster-admins,cluster-admin,dedicated-admin",
@@ -220,7 +221,7 @@ func opaContainer(tempo v1alpha1.TempoStack) corev1.Container {
 
 	return corev1.Container{
 		Name:  "opa",
-		Image: tempo.Spec.Images.TempoGatewayOpa,
+		Image: params.Images.TempoGatewayOpa,
 		Args:  args,
 		Ports: []corev1.ContainerPort{
 			{

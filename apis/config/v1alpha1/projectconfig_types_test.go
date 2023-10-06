@@ -16,6 +16,12 @@ func TestValidateProjectConfig(t *testing.T) {
 		{
 			name: "valid featureGates.tlsProfile setting",
 			input: ProjectConfig{
+				Images: ImagesSpec{
+					Tempo:           "docker.io/grafana/tempo:latest",
+					TempoQuery:      "docker.io/grafana/tempo-query:latest",
+					TempoGateway:    "quay.io/observatorium/api:latest",
+					TempoGatewayOpa: "quay.io/observatorium/opa-openshift:latest",
+				},
 				Gates: FeatureGates{
 					TLSProfile: string(TLSProfileModernType),
 				},
@@ -39,38 +45,17 @@ func TestValidateProjectConfig(t *testing.T) {
 		{
 			name: "invalid tempo container image",
 			input: ProjectConfig{
-				DefaultImages: ImagesSpec{
-					Tempo: "abc@def",
+				Images: ImagesSpec{
+					Tempo:           "abc@def",
+					TempoQuery:      "docker.io/grafana/tempo-query:latest",
+					TempoGateway:    "quay.io/observatorium/api:latest",
+					TempoGatewayOpa: "quay.io/observatorium/opa-openshift:latest",
 				},
 				Gates: FeatureGates{
 					TLSProfile: "Modern",
 				},
 			},
-			expected: errors.New("invalid value 'abc@def' for setting images.tempo"),
-		},
-		{
-			name: "invalid tempoQuery container image",
-			input: ProjectConfig{
-				DefaultImages: ImagesSpec{
-					TempoQuery: "abc@def",
-				},
-				Gates: FeatureGates{
-					TLSProfile: "Modern",
-				},
-			},
-			expected: errors.New("invalid value 'abc@def' for setting images.tempoQuery"),
-		},
-		{
-			name: "invalid tempoGateway container image",
-			input: ProjectConfig{
-				DefaultImages: ImagesSpec{
-					TempoGateway: "abc@def",
-				},
-				Gates: FeatureGates{
-					TLSProfile: "Modern",
-				},
-			},
-			expected: errors.New("invalid value 'abc@def' for setting images.tempoGateway"),
+			expected: errors.New("invalid value 'abc@def': please set the RELATED_IMAGE_TEMPO environment variable to a valid container image"),
 		},
 	}
 

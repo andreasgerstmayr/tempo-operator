@@ -11,32 +11,35 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/grafana/tempo-operator/apis/tempo/v1alpha1"
+	"github.com/grafana/tempo-operator/internal/manifests/manifestutils"
 	"github.com/grafana/tempo-operator/internal/manifests/naming"
 )
 
 func TestPatchOPAContainer(t *testing.T) {
-	tempo := v1alpha1.TempoStack{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "simplest",
-			Namespace: "observability",
-		},
-		Spec: v1alpha1.TempoStackSpec{
-			Tenants: &v1alpha1.TenantsSpec{
-				Mode: v1alpha1.ModeOpenShift,
-				Authentication: []v1alpha1.AuthenticationSpec{
-					{
-						TenantName: "dev",
-						TenantID:   "abcd1",
-					},
-					{
-						TenantName: "prod",
-						TenantID:   "abcd2",
+	params := manifestutils.Params{
+		Tempo: v1alpha1.TempoStack{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "simplest",
+				Namespace: "observability",
+			},
+			Spec: v1alpha1.TempoStackSpec{
+				Tenants: &v1alpha1.TenantsSpec{
+					Mode: v1alpha1.ModeOpenShift,
+					Authentication: []v1alpha1.AuthenticationSpec{
+						{
+							TenantName: "dev",
+							TenantID:   "abcd1",
+						},
+						{
+							TenantName: "prod",
+							TenantID:   "abcd2",
+						},
 					},
 				},
 			},
 		},
 	}
-	dep, err := patchOCPOPAContainer(tempo, &appsv1.Deployment{})
+	dep, err := patchOCPOPAContainer(params, &appsv1.Deployment{})
 	require.NoError(t, err)
 	require.Equal(t, 1, len(dep.Spec.Template.Spec.Containers))
 	assert.Equal(t, []string{

@@ -23,12 +23,6 @@ import (
 func TestDefault(t *testing.T) {
 	defaulter := &Defaulter{
 		ctrlConfig: v1alpha1.ProjectConfig{
-			DefaultImages: v1alpha1.ImagesSpec{
-				Tempo:           "docker.io/grafana/tempo:x.y.z",
-				TempoQuery:      "docker.io/grafana/tempo-query:x.y.z",
-				TempoGateway:    "docker.io/observatorium/gateway:1.2.3",
-				TempoGatewayOpa: "docker.io/observatorium/opa-openshift:1.2.3",
-			},
 			Distribution: "upstream",
 		},
 	}
@@ -47,13 +41,7 @@ func TestDefault(t *testing.T) {
 				},
 				Spec: TempoStackSpec{
 					ReplicationFactor: 2,
-					Images: v1alpha1.ImagesSpec{
-						Tempo:           "docker.io/grafana/tempo:1.2.3",
-						TempoQuery:      "docker.io/grafana/tempo-query:1.2.3",
-						TempoGateway:    "docker.io/observatorium/gateway:1.2.3",
-						TempoGatewayOpa: "docker.io/observatorium/opa-openshift:1.2.4",
-					},
-					ServiceAccount: "tempo-test",
+					ServiceAccount:    "tempo-test",
 					Retention: RetentionSpec{
 						Global: RetentionConfig{
 							Traces: metav1.Duration{Duration: time.Hour},
@@ -79,13 +67,7 @@ func TestDefault(t *testing.T) {
 				},
 				Spec: TempoStackSpec{
 					ReplicationFactor: 2,
-					Images: v1alpha1.ImagesSpec{
-						Tempo:           "docker.io/grafana/tempo:1.2.3",
-						TempoQuery:      "docker.io/grafana/tempo-query:1.2.3",
-						TempoGateway:    "docker.io/observatorium/gateway:1.2.3",
-						TempoGatewayOpa: "docker.io/observatorium/opa-openshift:1.2.4",
-					},
-					ServiceAccount: "tempo-test",
+					ServiceAccount:    "tempo-test",
 					Retention: RetentionSpec{
 						Global: RetentionConfig{
 							Traces: metav1.Duration{Duration: time.Hour},
@@ -131,13 +113,7 @@ func TestDefault(t *testing.T) {
 				},
 				Spec: TempoStackSpec{
 					ReplicationFactor: 1,
-					Images: v1alpha1.ImagesSpec{
-						Tempo:           "docker.io/grafana/tempo:x.y.z",
-						TempoQuery:      "docker.io/grafana/tempo-query:x.y.z",
-						TempoGateway:    "docker.io/observatorium/gateway:1.2.3",
-						TempoGatewayOpa: "docker.io/observatorium/opa-openshift:1.2.3",
-					},
-					ServiceAccount: "tempo-test",
+					ServiceAccount:    "tempo-test",
 					Retention: RetentionSpec{
 						Global: RetentionConfig{
 							Traces: metav1.Duration{Duration: 48 * time.Hour},
@@ -195,13 +171,7 @@ func TestDefault(t *testing.T) {
 				},
 				Spec: TempoStackSpec{
 					ReplicationFactor: 1,
-					Images: v1alpha1.ImagesSpec{
-						Tempo:           "docker.io/grafana/tempo:x.y.z",
-						TempoQuery:      "docker.io/grafana/tempo-query:x.y.z",
-						TempoGateway:    "docker.io/observatorium/gateway:1.2.3",
-						TempoGatewayOpa: "docker.io/observatorium/opa-openshift:1.2.3",
-					},
-					ServiceAccount: "tempo-test",
+					ServiceAccount:    "tempo-test",
 					Retention: RetentionSpec{
 						Global: RetentionConfig{
 							Traces: metav1.Duration{Duration: 48 * time.Hour},

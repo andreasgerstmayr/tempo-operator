@@ -29,12 +29,6 @@ func createTempoCR(t *testing.T, nsn types.NamespacedName, version string, manag
 		},
 		Spec: v1alpha1.TempoStackSpec{
 			ManagementState: managementState,
-			Images: configv1alpha1.ImagesSpec{
-				Tempo:           "docker.io/grafana/tempo:0.0.0",
-				TempoQuery:      "docker.io/grafana/tempo-query:0.0.0",
-				TempoGateway:    "quay.io/observatorium/api:0.0.0",
-				TempoGatewayOpa: "quay.io/observatorium/opa-openshift:0.0.0",
-			},
 			Storage: v1alpha1.ObjectStorageSpec{
 				Secret: v1alpha1.ObjectStorageSecretSpec{
 					Type: v1alpha1.ObjectStorageSecretS3,
@@ -66,7 +60,7 @@ func TestUpgradeToLatest(t *testing.T) {
 		Client:   k8sClient,
 		Recorder: record.NewFakeRecorder(1),
 		CtrlConfig: configv1alpha1.ProjectConfig{
-			DefaultImages: configv1alpha1.ImagesSpec{
+			Images: configv1alpha1.ImagesSpec{
 				Tempo:           "docker.io/grafana/tempo:latest",
 				TempoQuery:      "docker.io/grafana/tempo-query:latest",
 				TempoGateway:    "quay.io/observatorium/api:latest",
@@ -84,12 +78,6 @@ func TestUpgradeToLatest(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, currentV.OperatorVersion, upgradedTempo.Status.OperatorVersion)
 	assert.Equal(t, currentV.TempoVersion, upgradedTempo.Status.TempoVersion)
-
-	// assert images were updated
-	assert.Equal(t, "docker.io/grafana/tempo:latest", upgradedTempo.Spec.Images.Tempo)
-	assert.Equal(t, "docker.io/grafana/tempo-query:latest", upgradedTempo.Spec.Images.TempoQuery)
-	assert.Equal(t, "quay.io/observatorium/api:latest", upgradedTempo.Spec.Images.TempoGateway)
-	assert.Equal(t, "quay.io/observatorium/opa-openshift:latest", upgradedTempo.Spec.Images.TempoGatewayOpa)
 }
 
 func TestSkipUpgrade(t *testing.T) {
@@ -116,7 +104,7 @@ func TestSkipUpgrade(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			nsn := types.NamespacedName{Name: "upgrade-test-" + test.name, Namespace: "default"}
-			originalTempo := createTempoCR(t, nsn, test.version, test.managementState)
+			createTempoCR(t, nsn, test.version, test.managementState)
 
 			currentV := version.Get()
 			currentV.OperatorVersion = currentOperatorVersion
@@ -125,7 +113,7 @@ func TestSkipUpgrade(t *testing.T) {
 				Client:   k8sClient,
 				Recorder: record.NewFakeRecorder(1),
 				CtrlConfig: configv1alpha1.ProjectConfig{
-					DefaultImages: configv1alpha1.ImagesSpec{
+					Images: configv1alpha1.ImagesSpec{
 						Tempo:           "docker.io/grafana/tempo:latest",
 						TempoQuery:      "docker.io/grafana/tempo-query:latest",
 						TempoGateway:    "quay.io/observatorium/api:latest",
@@ -142,12 +130,6 @@ func TestSkipUpgrade(t *testing.T) {
 			err = k8sClient.Get(context.Background(), nsn, &upgradedTempo)
 			assert.NoError(t, err)
 			assert.Equal(t, test.version, upgradedTempo.Status.OperatorVersion)
-
-			// assert images were not updated
-			assert.Equal(t, originalTempo.Spec.Images.Tempo, upgradedTempo.Spec.Images.Tempo)
-			assert.Equal(t, originalTempo.Spec.Images.TempoQuery, upgradedTempo.Spec.Images.TempoQuery)
-			assert.Equal(t, originalTempo.Spec.Images.TempoGateway, upgradedTempo.Spec.Images.TempoGateway)
-			assert.Equal(t, originalTempo.Spec.Images.TempoGatewayOpa, upgradedTempo.Spec.Images.TempoGatewayOpa)
 		})
 	}
 }

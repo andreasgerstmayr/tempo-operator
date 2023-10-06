@@ -18,36 +18,38 @@ import (
 )
 
 func TestBuildCompactor(t *testing.T) {
-	objects, err := BuildCompactor(manifestutils.Params{Tempo: v1alpha1.TempoStack{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "test",
-			Namespace: "project1",
+	objects, err := BuildCompactor(manifestutils.Params{
+		Images: configv1alpha1.ImagesSpec{
+			Tempo: "docker.io/grafana/tempo:1.5.0",
 		},
-		Spec: v1alpha1.TempoStackSpec{
-			Images: configv1alpha1.ImagesSpec{
-				Tempo: "docker.io/grafana/tempo:1.5.0",
+		Tempo: v1alpha1.TempoStack{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "test",
+				Namespace: "project1",
 			},
-			ServiceAccount: "tempo-test-serviceaccount",
-			Template: v1alpha1.TempoTemplateSpec{
-				Compactor: v1alpha1.TempoComponentSpec{
-					NodeSelector: map[string]string{"a": "b"},
-					Tolerations: []corev1.Toleration{
-						{
-							Key: "c",
+			Spec: v1alpha1.TempoStackSpec{
+				ServiceAccount: "tempo-test-serviceaccount",
+				Template: v1alpha1.TempoTemplateSpec{
+					Compactor: v1alpha1.TempoComponentSpec{
+						NodeSelector: map[string]string{"a": "b"},
+						Tolerations: []corev1.Toleration{
+							{
+								Key: "c",
+							},
+						},
+					},
+				},
+				Resources: v1alpha1.Resources{
+					Total: &corev1.ResourceRequirements{
+						Limits: corev1.ResourceList{
+							corev1.ResourceCPU:    resource.MustParse("1000m"),
+							corev1.ResourceMemory: resource.MustParse("2Gi"),
 						},
 					},
 				},
 			},
-			Resources: v1alpha1.Resources{
-				Total: &corev1.ResourceRequirements{
-					Limits: corev1.ResourceList{
-						corev1.ResourceCPU:    resource.MustParse("1000m"),
-						corev1.ResourceMemory: resource.MustParse("2Gi"),
-					},
-				},
-			},
 		},
-	}})
+	})
 	require.NoError(t, err)
 
 	labels := manifestutils.ComponentLabels("compactor", "test")

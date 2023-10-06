@@ -125,7 +125,7 @@ func deployment(params manifestutils.Params) *v1.Deployment {
 					Containers: []corev1.Container{
 						{
 							Name:  "tempo",
-							Image: tempo.Spec.Images.Tempo,
+							Image: params.Images.Tempo,
 							Args: []string{
 								"-target=distributor",
 								"-config.file=/conf/tempo.yaml",

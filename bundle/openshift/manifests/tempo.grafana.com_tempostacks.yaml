@@ -54,7 +54,7 @@ spec:
             description: TempoStackSpec defines the desired state of TempoStack.
             properties:
               images:
-                description: Images defines the image for each container.
+                description: DEPRECATED. Images defines the image for each container.
                 properties:
                   tempo:
                     description: Tempo defines the tempo container image.

@@ -13,6 +13,7 @@ import (
 
 // This upgrade modifies the immutable field PodManagementPolicy of the ingester StatefulSet,
 // therefore we delete the ingester StatefulSet, which will be recreated in the reconcile loop.
+// It also removes the images field of the TempoStack, therefore we clear this field here.
 func upgrade0_5_0(ctx context.Context, u Upgrade, tempo *v1alpha1.TempoStack) (*v1alpha1.TempoStack, error) {
 	listOps := []client.ListOption{
 		client.MatchingLabels(manifestutils.ComponentLabels(manifestutils.IngesterComponentName, tempo.Name)),
@@ -31,6 +32,11 @@ func upgrade0_5_0(ctx context.Context, u Upgrade, tempo *v1alpha1.TempoStack) (*
 			return tempo, fmt.Errorf("failed to delete ingester %s: %w", ingester.Name, err)
 		}
 	}
+
+	tempo.Spec.Images.Tempo = ""
+	tempo.Spec.Images.TempoQuery = ""
+	tempo.Spec.Images.TempoGateway = ""
+	tempo.Spec.Images.TempoGatewayOpa = ""
 
 	return tempo, nil
 }

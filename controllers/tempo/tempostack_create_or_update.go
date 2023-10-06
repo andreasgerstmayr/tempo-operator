@@ -150,6 +150,7 @@ func (r *TempoStackReconciler) createOrUpdate(ctx context.Context, log logr.Logg
 	}
 
 	managedObjects, err := manifests.BuildAll(manifestutils.Params{
+		Images:              r.CtrlConfig.Images,
 		Tempo:               tempo,
 		StorageParams:       storageConfig,
 		Gates:               r.CtrlConfig.Gates,

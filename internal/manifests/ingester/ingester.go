@@ -83,7 +83,7 @@ func statefulSet(params manifestutils.Params) (*v1.StatefulSet, error) {
 					Containers: []corev1.Container{
 						{
 							Name:  "tempo",
-							Image: tempo.Spec.Images.Tempo,
+							Image: params.Images.Tempo,
 							Args: []string{
 								"-target=ingester",
 								"-config.file=/conf/tempo.yaml",

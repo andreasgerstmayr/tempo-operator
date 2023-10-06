@@ -8,6 +8,7 @@ import (
 
 // Params holds parameters used to create Tempo objects.
 type Params struct {
+	Images              configv1alpha1.ImagesSpec
 	StorageParams       StorageParams
 	ConfigChecksum      string
 	Tempo               v1alpha1.TempoStack

@@ -277,26 +277,28 @@ func getExpectedDeployment(withJaeger bool) *v1.Deployment {
 }
 
 func TestBuildQueryFrontend(t *testing.T) {
-	objects, err := BuildQueryFrontend(manifestutils.Params{Tempo: v1alpha1.TempoStack{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "test",
-			Namespace: "project1",
+	objects, err := BuildQueryFrontend(manifestutils.Params{
+		Images: configv1alpha1.ImagesSpec{
+			Tempo: "docker.io/grafana/tempo:1.5.0",
 		},
-		Spec: v1alpha1.TempoStackSpec{
-			Images: configv1alpha1.ImagesSpec{
-				Tempo: "docker.io/grafana/tempo:1.5.0",
+		Tempo: v1alpha1.TempoStack{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "test",
+				Namespace: "project1",
 			},
-			ServiceAccount: "tempo-test-serviceaccount",
-			Resources: v1alpha1.Resources{
-				Total: &corev1.ResourceRequirements{
-					Limits: corev1.ResourceList{
-						corev1.ResourceCPU:    resource.MustParse("1000m"),
-						corev1.ResourceMemory: resource.MustParse("2Gi"),
+			Spec: v1alpha1.TempoStackSpec{
+				ServiceAccount: "tempo-test-serviceaccount",
+				Resources: v1alpha1.Resources{
+					Total: &corev1.ResourceRequirements{
+						Limits: corev1.ResourceList{
+							corev1.ResourceCPU:    resource.MustParse("1000m"),
+							corev1.ResourceMemory: resource.MustParse("2Gi"),
+						},
 					},
 				},
 			},
 		},
-	}})
+	})
 	require.NoError(t, err)
 	require.Equal(t, 3, len(objects))
 
@@ -315,42 +317,44 @@ func TestBuildQueryFrontend(t *testing.T) {
 
 func TestBuildQueryFrontendWithJaeger(t *testing.T) {
 	withJaeger := true
-	objects, err := BuildQueryFrontend(manifestutils.Params{Tempo: v1alpha1.TempoStack{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "test",
-			Namespace: "project1",
+	objects, err := BuildQueryFrontend(manifestutils.Params{
+		Images: configv1alpha1.ImagesSpec{
+			Tempo:      "docker.io/grafana/tempo:1.5.0",
+			TempoQuery: "docker.io/grafana/tempo-query:1.5.0",
 		},
-		Spec: v1alpha1.TempoStackSpec{
-			Images: configv1alpha1.ImagesSpec{
-				Tempo:      "docker.io/grafana/tempo:1.5.0",
-				TempoQuery: "docker.io/grafana/tempo-query:1.5.0",
+		Tempo: v1alpha1.TempoStack{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "test",
+				Namespace: "project1",
 			},
-			ServiceAccount: "tempo-test-serviceaccount",
-			Template: v1alpha1.TempoTemplateSpec{
-				QueryFrontend: v1alpha1.TempoQueryFrontendSpec{
-					TempoComponentSpec: v1alpha1.TempoComponentSpec{
-						NodeSelector: map[string]string{"a": "b"},
-						Tolerations: []corev1.Toleration{
-							{
-								Key: "c",
+			Spec: v1alpha1.TempoStackSpec{
+				ServiceAccount: "tempo-test-serviceaccount",
+				Template: v1alpha1.TempoTemplateSpec{
+					QueryFrontend: v1alpha1.TempoQueryFrontendSpec{
+						TempoComponentSpec: v1alpha1.TempoComponentSpec{
+							NodeSelector: map[string]string{"a": "b"},
+							Tolerations: []corev1.Toleration{
+								{
+									Key: "c",
+								},
 							},
 						},
-					},
-					JaegerQuery: v1alpha1.JaegerQuerySpec{
-						Enabled: true,
+						JaegerQuery: v1alpha1.JaegerQuerySpec{
+							Enabled: true,
+						},
 					},
 				},
-			},
-			Resources: v1alpha1.Resources{
-				Total: &corev1.ResourceRequirements{
-					Limits: corev1.ResourceList{
-						corev1.ResourceCPU:    resource.MustParse("1000m"),
-						corev1.ResourceMemory: resource.MustParse("2Gi"),
+				Resources: v1alpha1.Resources{
+					Total: &corev1.ResourceRequirements{
+						Limits: corev1.ResourceList{
+							corev1.ResourceCPU:    resource.MustParse("1000m"),
+							corev1.ResourceMemory: resource.MustParse("2Gi"),
+						},
 					},
 				},
 			},
 		},
-	}})
+	})
 
 	require.NoError(t, err)
 	require.Equal(t, 3, len(objects))

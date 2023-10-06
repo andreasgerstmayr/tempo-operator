@@ -10,7 +10,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
-	configv1alpha1 "github.com/grafana/tempo-operator/apis/config/v1alpha1"
 	"github.com/grafana/tempo-operator/apis/tempo/v1alpha1"
 )
 
@@ -26,11 +25,7 @@ func TestRefreshPatchError(t *testing.T) {
 			Name:      "my-stack",
 			Namespace: "some-ns",
 		},
-		Spec: v1alpha1.TempoStackSpec{
-			Images: configv1alpha1.ImagesSpec{
-				Tempo: "local:2.0",
-			},
-		},
+		Spec: v1alpha1.TempoStackSpec{},
 	}
 	s := &v1alpha1.TempoStackStatus{}
 	err := Refresh(context.Background(), c, stack, s)
@@ -46,11 +41,7 @@ func TestRefreshNoError(t *testing.T) {
 			Name:      "my-stack",
 			Namespace: "some-ns",
 		},
-		Spec: v1alpha1.TempoStackSpec{
-			Images: configv1alpha1.ImagesSpec{
-				Tempo: "local:2.0",
-			},
-		},
+		Spec: v1alpha1.TempoStackSpec{},
 	}
 
 	s := v1alpha1.TempoStackStatus{

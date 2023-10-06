@@ -124,7 +124,7 @@ func deployment(params manifestutils.Params) (*appsv1.Deployment, error) {
 					Containers: []corev1.Container{
 						{
 							Name:  "tempo",
-							Image: tempo.Spec.Images.Tempo,
+							Image: params.Images.Tempo,
 							Args: []string{
 								"-target=query-frontend",
 								"-config.file=/conf/tempo-query-frontend.yaml",
@@ -185,7 +185,7 @@ func deployment(params manifestutils.Params) (*appsv1.Deployment, error) {
 	if tempo.Spec.Template.QueryFrontend.JaegerQuery.Enabled {
 		jaegerQueryContainer := corev1.Container{
 			Name:  "tempo-query",
-			Image: tempo.Spec.Images.TempoQuery,
+			Image: params.Images.TempoQuery,
 			Args: []string{
 				"--query.base-path=/",
 				"--grpc-storage-plugin.configuration-file=/conf/tempo-query.yaml",

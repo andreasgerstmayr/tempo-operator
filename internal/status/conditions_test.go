@@ -6,7 +6,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	configv1alpha1 "github.com/grafana/tempo-operator/apis/config/v1alpha1"
 	"github.com/grafana/tempo-operator/apis/tempo/v1alpha1"
 )
 
@@ -76,11 +75,7 @@ func TestReadyCondition(t *testing.T) {
 					Name:      "my-stack",
 					Namespace: "some-ns",
 				},
-				Spec: v1alpha1.TempoStackSpec{
-					Images: configv1alpha1.ImagesSpec{
-						Tempo: "local:2.0",
-					},
-				},
+				Spec: v1alpha1.TempoStackSpec{},
 				Status: v1alpha1.TempoStackStatus{
 					Conditions: tc.inputConditions,
 				},
@@ -165,11 +160,7 @@ func TestFailedCondition(t *testing.T) {
 					Name:      "my-stack",
 					Namespace: "some-ns",
 				},
-				Spec: v1alpha1.TempoStackSpec{
-					Images: configv1alpha1.ImagesSpec{
-						Tempo: "local:2.0",
-					},
-				},
+				Spec: v1alpha1.TempoStackSpec{},
 				Status: v1alpha1.TempoStackStatus{
 					Conditions: tc.inputConditions,
 				},
@@ -254,11 +245,7 @@ func TestPendingCondition(t *testing.T) {
 					Name:      "my-stack",
 					Namespace: "some-ns",
 				},
-				Spec: v1alpha1.TempoStackSpec{
-					Images: configv1alpha1.ImagesSpec{
-						Tempo: "local:2.0",
-					},
-				},
+				Spec: v1alpha1.TempoStackSpec{},
 				Status: v1alpha1.TempoStackStatus{
 					Conditions: tc.inputConditions,
 				},
@@ -347,11 +334,7 @@ func TestConfigurationErrorCondition(t *testing.T) {
 					Name:      "my-stack",
 					Namespace: "some-ns",
 				},
-				Spec: v1alpha1.TempoStackSpec{
-					Images: configv1alpha1.ImagesSpec{
-						Tempo: "local:2.0",
-					},
-				},
+				Spec: v1alpha1.TempoStackSpec{},
 				Status: v1alpha1.TempoStackStatus{
 					Conditions: tc.inputConditions,
 				},

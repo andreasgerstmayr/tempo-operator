@@ -2,7 +2,6 @@ package v1alpha1
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"math"
 	"net"
@@ -26,12 +25,8 @@ import (
 )
 
 var (
-	zeroQuantity                  = resource.MustParse("0Gi")
-	tenGBQuantity                 = resource.MustParse("10Gi")
-	errNoDefaultTempoImage        = errors.New("please specify a tempo image in the CR or in the operator configuration")
-	errNoDefaultTempoGatewayImage = errors.New("please specify a tempo-gateway image in the CR or in the operator configuration")
-	errNoDefaultGatewayOPAImage   = errors.New("please specify a opa image in the CR or in the operator configuration")
-	errNoDefaultTempoQueryImage   = errors.New("please specify a tempo-query image in the CR or in the operator configuration")
+	zeroQuantity  = resource.MustParse("0Gi")
+	tenGBQuantity = resource.MustParse("10Gi")
 )
 
 const maxLabelLength = 63
@@ -78,31 +73,6 @@ func (d *Defaulter) Default(ctx context.Context, obj runtime.Object) error {
 		r.Labels["app.kubernetes.io/managed-by"] = "tempo-operator"
 	}
 	r.Labels["tempo.grafana.com/distribution"] = d.ctrlConfig.Distribution
-
-	if r.Spec.Images.Tempo == "" {
-		if d.ctrlConfig.DefaultImages.Tempo == "" {
-			return errNoDefaultTempoImage
-		}
-		r.Spec.Images.Tempo = d.ctrlConfig.DefaultImages.Tempo
-	}
-	if r.Spec.Images.TempoQuery == "" {
-		if d.ctrlConfig.DefaultImages.TempoQuery == "" {
-			return errNoDefaultTempoQueryImage
-		}
-		r.Spec.Images.TempoQuery = d.ctrlConfig.DefaultImages.TempoQuery
-	}
-	if r.Spec.Images.TempoGateway == "" {
-		if d.ctrlConfig.DefaultImages.TempoGateway == "" {
-			return errNoDefaultTempoGatewayImage
-		}
-		r.Spec.Images.TempoGateway = d.ctrlConfig.DefaultImages.TempoGateway
-	}
-	if r.Spec.Images.TempoGatewayOpa == "" {
-		if d.ctrlConfig.DefaultImages.TempoGatewayOpa == "" {
-			return errNoDefaultGatewayOPAImage
-		}
-		r.Spec.Images.TempoGatewayOpa = d.ctrlConfig.DefaultImages.TempoGatewayOpa
-	}
 
 	if r.Spec.ServiceAccount == "" {
 		r.Spec.ServiceAccount = naming.DefaultServiceAccountName(r.Name)

@@ -5,26 +5,25 @@ import (
 	cfg "sigs.k8s.io/controller-runtime/pkg/config/v1alpha1"
 )
 
+const (
+	EnvRelatedImageTempo           = "RELATED_IMAGE_TEMPO"
+	EnvRelatedImageTempoQuery      = "RELATED_IMAGE_TEMPO_QUERY"
+	EnvRelatedImageTempoGateway    = "RELATED_IMAGE_TEMPO_GATEWAY"
+	EnvRelatedImageTempoGatewayOpa = "RELATED_IMAGE_TEMPO_GATEWAY_OPA"
+)
+
 // ImagesSpec defines the image for each container.
 type ImagesSpec struct {
 	// Tempo defines the tempo container image.
-	//
-	// +optional
 	Tempo string `json:"tempo,omitempty"`
 
 	// TempoQuery defines the tempo-query container image.
-	//
-	// +optional
 	TempoQuery string `json:"tempoQuery,omitempty"`
 
 	// TempoGateway defines the tempo-gateway container image.
-	//
-	// +optional
 	TempoGateway string `json:"tempoGateway,omitempty"`
 
 	// TempoGatewayOpa defines the OPA sidecar container for TempoGateway.
-	//
-	// +optional
 	TempoGatewayOpa string `json:"tempoGatewayOpa,omitempty"`
 }
 
@@ -183,7 +182,7 @@ type ProjectConfig struct {
 	// ControllerManagerConfigurationSpec returns the configurations for controllers
 	cfg.ControllerManagerConfigurationSpec `json:",inline"`
 
-	DefaultImages ImagesSpec `json:"images"`
+	Images ImagesSpec
 
 	Gates FeatureGates `json:"featureGates,omitempty"`
 

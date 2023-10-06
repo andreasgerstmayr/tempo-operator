@@ -75,7 +75,7 @@ func deployment(params manifestutils.Params) (*v1.Deployment, error) {
 					Containers: []corev1.Container{
 						{
 							Name:  "tempo",
-							Image: tempo.Spec.Images.Tempo,
+							Image: params.Images.Tempo,
 							Args: []string{
 								"-target=querier",
 								"-config.file=/conf/tempo.yaml",

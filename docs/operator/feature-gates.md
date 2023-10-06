@@ -463,8 +463,6 @@ string
 
 <td>
 
-<em>(Optional)</em>
-
 <p>Tempo defines the tempo container image.</p>
 
 </td>
@@ -485,8 +483,6 @@ string
 </td>
 
 <td>
-
-<em>(Optional)</em>
 
 <p>TempoQuery defines the tempo-query container image.</p>
 
@@ -509,8 +505,6 @@ string
 
 <td>
 
-<em>(Optional)</em>
-
 <p>TempoGateway defines the tempo-gateway container image.</p>
 
 </td>
@@ -531,8 +525,6 @@ string
 </td>
 
 <td>
-
-<em>(Optional)</em>
 
 <p>TempoGatewayOpa defines the OPA sidecar container for TempoGateway.</p>
 
@@ -1057,7 +1049,7 @@ K8S Controller-runtime v1alpha1.ControllerWebhook
 
 <td>
 
-<code>images</code><br/>
+<code>Images</code><br/>
 
 <em>
 

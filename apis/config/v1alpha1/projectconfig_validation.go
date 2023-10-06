@@ -18,22 +18,16 @@ func (c *ProjectConfig) Validate() error {
 		return fmt.Errorf("invalid value '%s' for setting featureGates.tlsProfile (valid values: %s, %s and %s)", c.Gates.TLSProfile, TLSProfileOldType, TLSProfileIntermediateType, TLSProfileModernType)
 	}
 
-	if c.DefaultImages.Tempo != "" {
-		_, err := dockerparser.Parse(c.DefaultImages.Tempo)
+	// Validate container images
+	for envName, envValue := range map[string]string{
+		EnvRelatedImageTempo:           c.Images.Tempo,
+		EnvRelatedImageTempoQuery:      c.Images.TempoQuery,
+		EnvRelatedImageTempoGateway:    c.Images.TempoGateway,
+		EnvRelatedImageTempoGatewayOpa: c.Images.TempoGatewayOpa,
+	} {
+		_, err := dockerparser.Parse(envValue)
 		if err != nil {
-			return fmt.Errorf("invalid value '%s' for setting images.tempo", c.DefaultImages.Tempo)
-		}
-	}
-	if c.DefaultImages.TempoQuery != "" {
-		_, err := dockerparser.Parse(c.DefaultImages.TempoQuery)
-		if err != nil {
-			return fmt.Errorf("invalid value '%s' for setting images.tempoQuery", c.DefaultImages.TempoQuery)
-		}
-	}
-	if c.DefaultImages.TempoGateway != "" {
-		_, err := dockerparser.Parse(c.DefaultImages.TempoGateway)
-		if err != nil {
-			return fmt.Errorf("invalid value '%s' for setting images.tempoGateway", c.DefaultImages.TempoGateway)
+			return fmt.Errorf("invalid value '%s': please set the %s environment variable to a valid container image", envValue, envName)
 		}
 	}
 

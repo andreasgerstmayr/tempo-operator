@@ -3468,7 +3468,7 @@ Feature Gates.ImagesSpec
 
 <em>(Optional)</em>
 
-<p>Images defines the image for each container.</p>
+<p>DEPRECATED. Images defines the image for each container.</p>
 
 </td>
 </tr>

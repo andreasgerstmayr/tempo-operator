@@ -67,7 +67,7 @@ func BuildGateway(params manifestutils.Params) ([]client.Object, error) {
 
 	if params.Tempo.Spec.Tenants.Mode == v1alpha1.ModeOpenShift {
 		dep = patchOCPServiceAccount(params.Tempo, dep)
-		dep, err = patchOCPOPAContainer(params.Tempo, dep)
+		dep, err = patchOCPOPAContainer(params, dep)
 		if err != nil {
 			return nil, err
 		}
@@ -160,7 +160,7 @@ func deployment(params manifestutils.Params, rbacCfgHash string, tenantsCfgHash 
 					Containers: []corev1.Container{
 						{
 							Name:  "tempo-gateway",
-							Image: tempo.Spec.Images.TempoGateway,
+							Image: params.Images.TempoGateway,
 							Args: append([]string{
 								fmt.Sprintf("--traces.tenant-header=%s", manifestutils.TenantHeader),
 								fmt.Sprintf("--web.listen=0.0.0.0:%d", portPublic),

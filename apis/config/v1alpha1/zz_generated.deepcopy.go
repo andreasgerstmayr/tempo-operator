@@ -112,7 +112,7 @@ func (in *ProjectConfig) DeepCopyInto(out *ProjectConfig) {
 	*out = *in
 	out.TypeMeta = in.TypeMeta
 	in.ControllerManagerConfigurationSpec.DeepCopyInto(&out.ControllerManagerConfigurationSpec)
-	out.DefaultImages = in.DefaultImages
+	out.Images = in.Images
 	out.Gates = in.Gates
 }
 

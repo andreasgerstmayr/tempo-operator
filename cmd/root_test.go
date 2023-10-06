@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"os"
 	"testing"
 
 	"github.com/spf13/cobra"
@@ -9,6 +10,15 @@ import (
 	"github.com/stretchr/testify/require"
 
 	configv1alpha1 "github.com/grafana/tempo-operator/apis/config/v1alpha1"
+)
+
+var (
+	DefaultImages = configv1alpha1.ImagesSpec{
+		Tempo:           "docker.io/grafana/tempo:1.5.0",
+		TempoQuery:      "docker.io/grafana/tempo-query:1.5.0",
+		TempoGateway:    "docker.io/observatorium/api:1.5.0",
+		TempoGatewayOpa: "quay.io/observatorium/opa-openshift:latest",
+	}
 )
 
 func TestReadConfig(t *testing.T) {
@@ -22,6 +32,7 @@ func TestReadConfig(t *testing.T) {
 			name:  "no featureGates.tlsProfile given, using default value",
 			input: "testdata/empty.yaml",
 			expected: configv1alpha1.ProjectConfig{
+				Images: DefaultImages,
 				Gates: configv1alpha1.FeatureGates{
 					TLSProfile: string(configv1alpha1.TLSProfileModernType),
 				},
@@ -31,6 +42,7 @@ func TestReadConfig(t *testing.T) {
 			name:  "featureGates.tlsProfile given, not using default value",
 			input: "testdata/tlsprofile_old.yaml",
 			expected: configv1alpha1.ProjectConfig{
+				Images: DefaultImages,
 				Gates: configv1alpha1.FeatureGates{
 					TLSProfile: string(configv1alpha1.TLSProfileOldType),
 				},
@@ -43,6 +55,7 @@ func TestReadConfig(t *testing.T) {
 		},
 	}
 
+	setupEnvVars()
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			cmd := &cobra.Command{}
@@ -60,4 +73,11 @@ func TestReadConfig(t *testing.T) {
 			}
 		})
 	}
+}
+
+func setupEnvVars() {
+	os.Setenv("RELATED_IMAGE_TEMPO", DefaultImages.Tempo)
+	os.Setenv("RELATED_IMAGE_TEMPO_QUERY", DefaultImages.TempoQuery)
+	os.Setenv("RELATED_IMAGE_TEMPO_GATEWAY", DefaultImages.TempoGateway)
+	os.Setenv("RELATED_IMAGE_TEMPO_GATEWAY_OPA", DefaultImages.TempoGatewayOpa)
 }

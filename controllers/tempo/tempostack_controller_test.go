@@ -25,6 +25,19 @@ import (
 	"github.com/grafana/tempo-operator/internal/version"
 )
 
+var (
+	defaultCtrlConfig = configv1alpha1.ProjectConfig{
+		Images: configv1alpha1.ImagesSpec{
+			Tempo:        "docker.io/grafana/tempo:1.5.0",
+			TempoQuery:   "docker.io/grafana/tempo-query:1.5.0",
+			TempoGateway: "docker.io/observatorium/api:1.5.0",
+		},
+		Gates: configv1alpha1.FeatureGates{
+			TLSProfile: string(configv1alpha1.TLSProfileIntermediateType),
+		},
+	}
+)
+
 func createSecret(t *testing.T, nsn types.NamespacedName) *corev1.Secret {
 	storageSecret := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
@@ -66,9 +79,6 @@ func createTempoCR(t *testing.T, nsn types.NamespacedName, storageSecret *corev1
 			Namespace: nsn.Namespace,
 		},
 		Spec: v1alpha1.TempoStackSpec{
-			Images: configv1alpha1.ImagesSpec{
-				Tempo: "docker.io/grafana/tempo:1.5.0",
-			},
 			LimitSpec: v1alpha1.LimitSpec{
 				PerTenant: map[string]v1alpha1.RateLimitSpec{},
 			},
@@ -93,15 +103,11 @@ func TestReconcile(t *testing.T) {
 	createTempoCR(t, nsn, storageSecret)
 
 	reconciler := TempoStackReconciler{
-		Client:   k8sClient,
-		Scheme:   testScheme,
-		Recorder: record.NewFakeRecorder(1),
-		CtrlConfig: configv1alpha1.ProjectConfig{
-			Gates: configv1alpha1.FeatureGates{
-				TLSProfile: string(configv1alpha1.TLSProfileIntermediateType),
-			},
-		},
-		Version: version.Get(),
+		Client:     k8sClient,
+		Scheme:     testScheme,
+		Recorder:   record.NewFakeRecorder(1),
+		CtrlConfig: defaultCtrlConfig,
+		Version:    version.Get(),
 	}
 	req := ctrl.Request{
 		NamespacedName: nsn,
@@ -163,15 +169,11 @@ func TestReadyToConfigurationError(t *testing.T) {
 
 	// Reconcile
 	reconciler := TempoStackReconciler{
-		Client:   k8sClient,
-		Scheme:   testScheme,
-		Recorder: record.NewFakeRecorder(1),
-		CtrlConfig: configv1alpha1.ProjectConfig{
-			Gates: configv1alpha1.FeatureGates{
-				TLSProfile: string(configv1alpha1.TLSProfileIntermediateType),
-			},
-		},
-		Version: version.Get(),
+		Client:     k8sClient,
+		Scheme:     testScheme,
+		Recorder:   record.NewFakeRecorder(1),
+		CtrlConfig: defaultCtrlConfig,
+		Version:    version.Get(),
 	}
 	req := ctrl.Request{
 		NamespacedName: nsn,
@@ -241,15 +243,11 @@ func TestConfigurationErrorToConfigurationError(t *testing.T) {
 
 	// Reconcile
 	reconciler := TempoStackReconciler{
-		Client:   k8sClient,
-		Scheme:   testScheme,
-		Recorder: record.NewFakeRecorder(1),
-		CtrlConfig: configv1alpha1.ProjectConfig{
-			Gates: configv1alpha1.FeatureGates{
-				TLSProfile: string(configv1alpha1.TLSProfileIntermediateType),
-			},
-		},
-		Version: version.Get(),
+		Client:     k8sClient,
+		Scheme:     testScheme,
+		Recorder:   record.NewFakeRecorder(1),
+		CtrlConfig: defaultCtrlConfig,
+		Version:    version.Get(),
 	}
 	req := ctrl.Request{
 		NamespacedName: nsn,
@@ -309,15 +307,11 @@ func TestConfigurationErrorToReady(t *testing.T) {
 
 	// Reconcile
 	reconciler := TempoStackReconciler{
-		Client:   k8sClient,
-		Scheme:   testScheme,
-		Recorder: record.NewFakeRecorder(1),
-		CtrlConfig: configv1alpha1.ProjectConfig{
-			Gates: configv1alpha1.FeatureGates{
-				TLSProfile: string(configv1alpha1.TLSProfileIntermediateType),
-			},
-		},
-		Version: version.Get(),
+		Client:     k8sClient,
+		Scheme:     testScheme,
+		Recorder:   record.NewFakeRecorder(1),
+		CtrlConfig: defaultCtrlConfig,
+		Version:    version.Get(),
 	}
 	req := ctrl.Request{
 		NamespacedName: nsn,
@@ -385,6 +379,7 @@ func TestReconcileGenericError(t *testing.T) {
 		Scheme:   testScheme,
 		Recorder: record.NewFakeRecorder(1),
 		CtrlConfig: configv1alpha1.ProjectConfig{
+			Images: defaultCtrlConfig.Images,
 			Gates: configv1alpha1.FeatureGates{
 				TLSProfile: string(configv1alpha1.TLSProfileIntermediateType),
 				OpenShift: configv1alpha1.OpenShiftFeatureGates{
@@ -416,15 +411,11 @@ func TestReconcileGenericError(t *testing.T) {
 func TestStorageCustomCA(t *testing.T) {
 	nsn := types.NamespacedName{Name: "custom-ca", Namespace: "default"}
 	reconciler := TempoStackReconciler{
-		Client:   k8sClient,
-		Scheme:   testScheme,
-		Recorder: record.NewFakeRecorder(1),
-		CtrlConfig: configv1alpha1.ProjectConfig{
-			Gates: configv1alpha1.FeatureGates{
-				TLSProfile: string(configv1alpha1.TLSProfileIntermediateType),
-			},
-		},
-		Version: version.Get(),
+		Client:     k8sClient,
+		Scheme:     testScheme,
+		Recorder:   record.NewFakeRecorder(1),
+		CtrlConfig: defaultCtrlConfig,
+		Version:    version.Get(),
 	}
 	req := ctrl.Request{
 		NamespacedName: nsn,
@@ -437,9 +428,6 @@ func TestStorageCustomCA(t *testing.T) {
 			Namespace: nsn.Namespace,
 		},
 		Spec: v1alpha1.TempoStackSpec{
-			Images: configv1alpha1.ImagesSpec{
-				Tempo: "docker.io/grafana/tempo:1.5.0",
-			},
 			LimitSpec: v1alpha1.LimitSpec{
 				PerTenant: map[string]v1alpha1.RateLimitSpec{},
 			},
@@ -534,6 +522,7 @@ func TestTLSEnable(t *testing.T) {
 		Scheme:   testScheme,
 		Recorder: record.NewFakeRecorder(1),
 		CtrlConfig: configv1alpha1.ProjectConfig{
+			Images: defaultCtrlConfig.Images,
 			Gates: configv1alpha1.FeatureGates{
 				BuiltInCertManagement: configv1alpha1.BuiltInCertManagement{
 					Enabled: true,
@@ -616,10 +605,6 @@ func TestPruneIngress(t *testing.T) {
 			Namespace: nsn.Namespace,
 		},
 		Spec: v1alpha1.TempoStackSpec{
-			Images: configv1alpha1.ImagesSpec{
-				Tempo:      "docker.io/grafana/tempo:1.5.0",
-				TempoQuery: "docker.io/grafana/tempo-query:1.5.0",
-			},
 			Storage: v1alpha1.ObjectStorageSpec{
 				Secret: v1alpha1.ObjectStorageSecretSpec{
 					Name: storageSecret.Name,
@@ -643,15 +628,11 @@ func TestPruneIngress(t *testing.T) {
 
 	// Reconcile
 	reconciler := TempoStackReconciler{
-		Client:   k8sClient,
-		Scheme:   testScheme,
-		Recorder: record.NewFakeRecorder(1),
-		CtrlConfig: configv1alpha1.ProjectConfig{
-			Gates: configv1alpha1.FeatureGates{
-				TLSProfile: string(configv1alpha1.TLSProfileIntermediateType),
-			},
-		},
-		Version: version.Get(),
+		Client:     k8sClient,
+		Scheme:     testScheme,
+		Recorder:   record.NewFakeRecorder(1),
+		CtrlConfig: defaultCtrlConfig,
+		Version:    version.Get(),
 	}
 	req := ctrl.Request{
 		NamespacedName: nsn,
@@ -705,11 +686,6 @@ func TestK8SGatewaySecret(t *testing.T) {
 						Enabled: true,
 					},
 				},
-			},
-			Images: configv1alpha1.ImagesSpec{
-				Tempo:        "docker.io/grafana/tempo:1.5.0",
-				TempoQuery:   "docker.io/grafana/tempo-query:1.5.0",
-				TempoGateway: "docker.io/observatorium/api:1.5.0",
 			},
 			LimitSpec: v1alpha1.LimitSpec{
 				PerTenant: map[string]v1alpha1.RateLimitSpec{},
@@ -776,6 +752,7 @@ func TestK8SGatewaySecret(t *testing.T) {
 		Scheme:   testScheme,
 		Recorder: record.NewFakeRecorder(1),
 		CtrlConfig: configv1alpha1.ProjectConfig{
+			Images: defaultCtrlConfig.Images,
 			Gates: configv1alpha1.FeatureGates{
 				BuiltInCertManagement: configv1alpha1.BuiltInCertManagement{
 					Enabled: true,
@@ -903,15 +880,11 @@ func TestUpgrade(t *testing.T) {
 
 	// Reconcile
 	reconciler := TempoStackReconciler{
-		Client:   k8sClient,
-		Scheme:   testScheme,
-		Recorder: record.NewFakeRecorder(1),
-		CtrlConfig: configv1alpha1.ProjectConfig{
-			Gates: configv1alpha1.FeatureGates{
-				TLSProfile: string(configv1alpha1.TLSProfileIntermediateType),
-			},
-		},
-		Version: version.Get(),
+		Client:     k8sClient,
+		Scheme:     testScheme,
+		Recorder:   record.NewFakeRecorder(1),
+		CtrlConfig: defaultCtrlConfig,
+		Version:    version.Get(),
 	}
 	req := ctrl.Request{
 		NamespacedName: nsn,

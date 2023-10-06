@@ -48,7 +48,7 @@ spec:
         name: ""
         version: v1
       specDescriptors:
-      - description: Images defines the image for each container.
+      - description: DEPRECATED. Images defines the image for each container.
         displayName: Container Images
         path: images
       - description: LimitSpec is used to limit ingestion and querying rates.

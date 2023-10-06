@@ -2,6 +2,7 @@ package generate
 
 import (
 	"bytes"
+	"os"
 	"strings"
 	"testing"
 
@@ -19,14 +20,7 @@ import (
 )
 
 func TestBuild(t *testing.T) {
-	ctrlConfig := configv1alpha1.ProjectConfig{
-		DefaultImages: configv1alpha1.ImagesSpec{
-			Tempo:           "tempo-image",
-			TempoQuery:      "tempo-query-image",
-			TempoGateway:    "tempo-gateway-image",
-			TempoGatewayOpa: "tempo-gateway-opa-image",
-		},
-	}
+	ctrlConfig := configv1alpha1.ProjectConfig{}
 	params := manifestutils.Params{
 		StorageParams: manifestutils.StorageParams{
 			AzureStorage: &manifestutils.AzureStorage{},
@@ -95,6 +89,7 @@ spec:
 	c.SetOut(out)
 	c.SetErr(out)
 
+	setupEnvVars()
 	c.SetArgs([]string{"generate"})
 	_, err := c.ExecuteC()
 	require.NoError(t, err)
@@ -120,6 +115,7 @@ func TestGenerateCmdReadFromFile(t *testing.T) {
 	c.SetOut(out)
 	c.SetErr(out)
 
+	setupEnvVars()
 	c.SetArgs([]string{"generate", "--cr", "testdata/cr.yaml"})
 	_, err := c.ExecuteC()
 	require.NoError(t, err)
@@ -135,4 +131,11 @@ metadata:
     app.kubernetes.io/name: tempo
   name: tempo-simplest-distributor
 `)
+}
+
+func setupEnvVars() {
+	os.Setenv("RELATED_IMAGE_TEMPO", "docker.io/grafana/tempo:1.5.0")
+	os.Setenv("RELATED_IMAGE_TEMPO_QUERY", "docker.io/grafana/tempo-query:1.5.0")
+	os.Setenv("RELATED_IMAGE_TEMPO_GATEWAY", "docker.io/observatorium/api:1.5.0")
+	os.Setenv("RELATED_IMAGE_TEMPO_GATEWAY_OPA", "quay.io/observatorium/opa-openshift:latest")
 }
