@@ -3,6 +3,16 @@ Changes by Version
 
 <!-- next version -->
 
+## 0.7.0
+
+### 💡 Enhancements 💡
+
+- `operator`: test changelog2 (#2)
+- `operator`: test changelog (#1)
+
+### Components
+- Tempo: [v2.3.0](https://github.com/grafana/tempo/releases/tag/v2.3.0)
+
 ## 0.6.0
 
 ### 🛑 Breaking changes 🛑
