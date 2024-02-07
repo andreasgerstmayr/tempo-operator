@@ -30,3 +30,7 @@ make bundle docker-build docker-push bundle-build bundle-push catalog-build cata
 sed -i "s@localregistry:5000@${IMG_PREFIX}@g" tests/e2e-upgrade/upgrade/10-setup-olm.yaml
 kubectl-kuttl test --config kuttl-test-upgrade.yaml --skip-delete
 ```
+
+## Known Issues
+This test will fail in the short time period between a release is tagged and the new release is contained in the OperatorHub catalog at quay.io/operatorhubio/catalog:latest.
+This is because the test creates a bundle with the currently tagged version and the latest dev version (from the sources of the current branch). If the OperatorHub catalog image doesn't contain the currently tagged version, there is no upgrade path to the latest dev version.
