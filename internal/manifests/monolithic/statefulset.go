@@ -3,6 +3,7 @@ package monolithic
 import (
 	"errors"
 	"fmt"
+	"path"
 
 	"github.com/operator-framework/operator-lib/proxy"
 	appsv1 "k8s.io/api/apps/v1"
@@ -13,6 +14,7 @@ import (
 	"k8s.io/utils/ptr"
 
 	"github.com/grafana/tempo-operator/apis/tempo/v1alpha1"
+	"github.com/grafana/tempo-operator/internal/manifests/gateway"
 	"github.com/grafana/tempo-operator/internal/manifests/manifestutils"
 	"github.com/grafana/tempo-operator/internal/manifests/naming"
 )
@@ -22,10 +24,9 @@ var (
 )
 
 // BuildTempoStatefulset creates the Tempo statefulset for a monolithic deployment.
-func BuildTempoStatefulset(opts Options) (*appsv1.StatefulSet, error) {
+func BuildTempoStatefulset(opts Options, extraAnnotations map[string]string) (*appsv1.StatefulSet, error) {
 	tempo := opts.Tempo
 	labels := ComponentLabels(manifestutils.TempoMonolithComponentName, tempo.Name)
-	annotations := manifestutils.CommonAnnotations(opts.ConfigChecksum)
 
 	sts := &appsv1.StatefulSet{
 		TypeMeta: metav1.TypeMeta{
@@ -52,7 +53,7 @@ func BuildTempoStatefulset(opts Options) (*appsv1.StatefulSet, error) {
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels:      labels,
-					Annotations: annotations,
+					Annotations: extraAnnotations,
 				},
 				Spec: corev1.PodSpec{
 					ServiceAccountName: naming.DefaultServiceAccountName(tempo.Name),
@@ -76,7 +77,7 @@ func BuildTempoStatefulset(opts Options) (*appsv1.StatefulSet, error) {
 									ReadOnly:  true,
 								},
 							},
-							Ports:           buildTempoPorts(opts),
+							Ports:           buildTempoContainerPorts(opts),
 							ReadinessProbe:  manifestutils.TempoReadinessProbe(false),
 							SecurityContext: manifestutils.TempoContainerSecurityContext(),
 							Resources:       ptr.Deref(tempo.Spec.Resources, corev1.ResourceRequirements{}),
@@ -88,7 +89,7 @@ func BuildTempoStatefulset(opts Options) (*appsv1.StatefulSet, error) {
 							VolumeSource: corev1.VolumeSource{
 								ConfigMap: &corev1.ConfigMapVolumeSource{
 									LocalObjectReference: corev1.LocalObjectReference{
-										Name: naming.Name(manifestutils.TempoMonolithComponentName, tempo.Name),
+										Name: naming.Name(manifestutils.TempoConfigName, tempo.Name),
 									},
 								},
 							},
@@ -104,24 +105,38 @@ func BuildTempoStatefulset(opts Options) (*appsv1.StatefulSet, error) {
 		return nil, err
 	}
 
+	if tempo.Spec.Ingestion != nil && tempo.Spec.Ingestion.OTLP != nil {
+		if tempo.Spec.Ingestion.OTLP.GRPC != nil && tempo.Spec.Ingestion.OTLP.GRPC.Enabled &&
+			tempo.Spec.Ingestion.OTLP.GRPC.TLS != nil && tempo.Spec.Ingestion.OTLP.GRPC.TLS.Enabled {
+			err := manifestutils.MountTLSSpecVolumes(
+				&sts.Spec.Template.Spec, "tempo", *tempo.Spec.Ingestion.OTLP.GRPC.TLS,
+				manifestutils.ReceiverTLSCADir, manifestutils.ReceiverTLSCertDir,
+			)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		if tempo.Spec.Ingestion.OTLP.HTTP != nil && tempo.Spec.Ingestion.OTLP.HTTP.Enabled &&
+			tempo.Spec.Ingestion.OTLP.HTTP.TLS != nil && tempo.Spec.Ingestion.OTLP.HTTP.TLS.Enabled {
+			err := manifestutils.MountTLSSpecVolumes(
+				&sts.Spec.Template.Spec, "tempo", *tempo.Spec.Ingestion.OTLP.HTTP.TLS,
+				manifestutils.ReceiverTLSCADir, manifestutils.ReceiverTLSCertDir,
+			)
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+
 	if tempo.Spec.JaegerUI != nil && tempo.Spec.JaegerUI.Enabled {
 		configureJaegerUI(opts, sts)
 	}
 
-	if tempo.Spec.Ingestion != nil && tempo.Spec.Ingestion.OTLP != nil {
-		if tempo.Spec.Ingestion.OTLP.GRPC != nil && tempo.Spec.Ingestion.OTLP.GRPC.Enabled &&
-			tempo.Spec.Ingestion.OTLP.GRPC.TLS != nil && tempo.Spec.Ingestion.OTLP.GRPC.TLS.Enabled {
-			manifestutils.ConfigureTLSVolumes(
-				&sts.Spec.Template.Spec, 0, *tempo.Spec.Ingestion.OTLP.GRPC.TLS,
-				manifestutils.ReceiverTLSCADir, manifestutils.ReceiverTLSCertDir, "receiver-tls-grpc",
-			)
-		}
-		if tempo.Spec.Ingestion.OTLP.HTTP != nil && tempo.Spec.Ingestion.OTLP.HTTP.Enabled &&
-			tempo.Spec.Ingestion.OTLP.HTTP.TLS != nil && tempo.Spec.Ingestion.OTLP.HTTP.TLS.Enabled {
-			manifestutils.ConfigureTLSVolumes(
-				&sts.Spec.Template.Spec, 0, *tempo.Spec.Ingestion.OTLP.HTTP.TLS,
-				manifestutils.ReceiverTLSCADir, manifestutils.ReceiverTLSCertDir, "receiver-tls-http",
-			)
+	if tempo.Spec.Multitenancy.IsGatewayEnabled() {
+		err = configureGateway(opts, sts)
+		if err != nil {
+			return nil, err
 		}
 	}
 
@@ -149,7 +164,7 @@ func buildAffinity(scheduler *v1alpha1.MonolithicSchedulerSpec, labels labels.Se
 	return manifestutils.DefaultAffinity(labels)
 }
 
-func buildTempoPorts(opts Options) []corev1.ContainerPort {
+func buildTempoContainerPorts(opts Options) []corev1.ContainerPort {
 	tempo := opts.Tempo
 	ports := []corev1.ContainerPort{
 		{
@@ -233,7 +248,7 @@ func configureStorage(opts Options, sts *appsv1.StatefulSet) error {
 			return errors.New("please configure .spec.storage.traces.s3")
 		}
 
-		err := manifestutils.ConfigureS3Storage(&sts.Spec.Template.Spec, 0, tempo.Spec.Storage.Traces.S3.Secret, tempo.Spec.Storage.Traces.S3.TLS)
+		err := manifestutils.ConfigureS3Storage(&sts.Spec.Template.Spec, "tempo", tempo.Spec.Storage.Traces.S3.Secret, tempo.Spec.Storage.Traces.S3.TLS)
 		if err != nil {
 			return err
 		}
@@ -243,7 +258,7 @@ func configureStorage(opts Options, sts *appsv1.StatefulSet) error {
 			return errors.New("please configure .spec.storage.traces.azure")
 		}
 
-		err := manifestutils.ConfigureAzureStorage(&sts.Spec.Template.Spec, 0, tempo.Spec.Storage.Traces.Azure.Secret, nil)
+		err := manifestutils.ConfigureAzureStorage(&sts.Spec.Template.Spec, "tempo", tempo.Spec.Storage.Traces.Azure.Secret, nil)
 		if err != nil {
 			return err
 		}
@@ -253,7 +268,7 @@ func configureStorage(opts Options, sts *appsv1.StatefulSet) error {
 			return errors.New("please configure .spec.storage.traces.gcs")
 		}
 
-		err := manifestutils.ConfigureGCS(&sts.Spec.Template.Spec, 0, tempo.Spec.Storage.Traces.GCS.Secret, nil)
+		err := manifestutils.ConfigureGCS(&sts.Spec.Template.Spec, "tempo", tempo.Spec.Storage.Traces.GCS.Secret, nil)
 		if err != nil {
 			return err
 		}
@@ -265,15 +280,27 @@ func configureStorage(opts Options, sts *appsv1.StatefulSet) error {
 }
 
 func configureJaegerUI(opts Options, sts *appsv1.StatefulSet) {
+	const tmpVolumeName = "tempo-query-tmp"
+	tempo := opts.Tempo
+
+	args := []string{
+		"--query.base-path=/",
+		"--grpc-storage-plugin.configuration-file=/conf/tempo-query.yaml",
+		"--query.bearer-token-propagation=true",
+	}
+
+	if tempo.Spec.Multitenancy != nil && tempo.Spec.Multitenancy.Enabled {
+		args = append(args, []string{
+			"--multi-tenancy.enabled=true",
+			fmt.Sprintf("--multi-tenancy.header=%s", manifestutils.TenantHeader),
+		}...)
+	}
+
 	tempoQuery := corev1.Container{
 		Name:  "tempo-query",
 		Image: opts.CtrlConfig.DefaultImages.TempoQuery,
 		Env:   proxy.ReadProxyVarsFromEnv(),
-		Args: []string{
-			"--query.base-path=/",
-			"--grpc-storage-plugin.configuration-file=/conf/tempo-query.yaml",
-			"--query.bearer-token-propagation=true",
-		},
+		Args:  args,
 		Ports: []corev1.ContainerPort{
 			{
 				Name:          manifestutils.JaegerGRPCQuery,
@@ -297,9 +324,156 @@ func configureJaegerUI(opts Options, sts *appsv1.StatefulSet) {
 				MountPath: "/conf",
 				ReadOnly:  true,
 			},
+			{
+				Name:      tmpVolumeName,
+				MountPath: "/tmp",
+			},
 		},
-		Resources: ptr.Deref(opts.Tempo.Spec.JaegerUI.Resources, corev1.ResourceRequirements{}),
+		Resources:       ptr.Deref(opts.Tempo.Spec.JaegerUI.Resources, corev1.ResourceRequirements{}),
+		SecurityContext: manifestutils.TempoContainerSecurityContext(),
+	}
+
+	tempoQueryVolume := corev1.Volume{
+		Name: tmpVolumeName,
+		VolumeSource: corev1.VolumeSource{
+			EmptyDir: &corev1.EmptyDirVolumeSource{},
+		},
 	}
 
 	sts.Spec.Template.Spec.Containers = append(sts.Spec.Template.Spec.Containers, tempoQuery)
+	sts.Spec.Template.Spec.Volumes = append(sts.Spec.Template.Spec.Volumes, tempoQueryVolume)
+}
+
+func configureGateway(opts Options, sts *appsv1.StatefulSet) error {
+	var (
+		containerName   = "tempo-gateway"
+		gatewayMountDir = "/etc/tempo-gateway"
+		servingCADir    = path.Join(gatewayMountDir, "serving-ca")
+		servingCertDir  = path.Join(gatewayMountDir, "serving-cert")
+	)
+
+	tempo := opts.Tempo
+	args := []string{
+		fmt.Sprintf("--web.listen=0.0.0.0:%d", manifestutils.GatewayPortHTTPServer),                  // proxies Tempo API and optionally Jaeger UI
+		fmt.Sprintf("--web.internal.listen=0.0.0.0:%d", manifestutils.GatewayPortInternalHTTPServer), // serves health checks
+		fmt.Sprintf("--traces.tenant-header=%s", manifestutils.TenantHeader),
+		fmt.Sprintf("--traces.tempo.endpoint=http://localhost:%d", manifestutils.PortHTTPServer), // Tempo API upstream
+		fmt.Sprintf("--rbac.config=%s", path.Join(gatewayMountDir, "rbac", manifestutils.GatewayRBACFileName)),
+		fmt.Sprintf("--tenants.config=%s", path.Join(gatewayMountDir, "tenants", manifestutils.GatewayTenantFileName)),
+		"--log.level=info",
+	}
+	ports := []corev1.ContainerPort{
+		{
+			Name:          manifestutils.GatewayHttpPortName,
+			ContainerPort: manifestutils.GatewayPortHTTPServer,
+			Protocol:      corev1.ProtocolTCP,
+		},
+		{
+			Name:          manifestutils.GatewayInternalHttpPortName,
+			ContainerPort: manifestutils.GatewayPortInternalHTTPServer,
+			Protocol:      corev1.ProtocolTCP,
+		},
+	}
+
+	if tempo.Spec.Ingestion != nil && tempo.Spec.Ingestion.OTLP != nil && tempo.Spec.Ingestion.OTLP.GRPC != nil && tempo.Spec.Ingestion.OTLP.GRPC.Enabled {
+		args = append(args, fmt.Sprintf("--grpc.listen=0.0.0.0:%d", manifestutils.GatewayPortGRPCServer))          // proxies Tempo Distributor gRPC
+		args = append(args, fmt.Sprintf("--traces.write.endpoint=localhost:%d", manifestutils.PortOtlpGrpcServer)) // Tempo Distributor gRPC upstream
+		ports = append(ports, corev1.ContainerPort{
+			Name:          manifestutils.GatewayGrpcPortName,
+			ContainerPort: manifestutils.GatewayPortGRPCServer,
+			Protocol:      corev1.ProtocolTCP,
+		})
+	}
+
+	if tempo.Spec.JaegerUI != nil && tempo.Spec.JaegerUI.Enabled {
+		args = append(args, fmt.Sprintf("--traces.read.endpoint=http://localhost:%d", manifestutils.PortJaegerQuery)) // Jaeger UI upstream
+	}
+
+	if opts.CtrlConfig.Gates.OpenShift.ServingCertsService {
+		args = append(args, []string{
+			fmt.Sprintf("--tls.server.cert-file=%s", path.Join(servingCertDir, "tls.crt")), // TLS of public HTTP (8080) and gRPC (8090) server
+			fmt.Sprintf("--tls.server.key-file=%s", path.Join(servingCertDir, "tls.key")),
+			fmt.Sprintf("--tls.healthchecks.server-ca-file=%s", path.Join(servingCADir, "service-ca.crt")),
+			fmt.Sprintf("--tls.healthchecks.server-name=%s", naming.ServiceFqdn(tempo.Namespace, tempo.Name, "")),
+			"--web.healthchecks.url=https://localhost:8080",
+		}...)
+	}
+
+	gatewayContainer := corev1.Container{
+		Name:           containerName,
+		Image:          opts.CtrlConfig.DefaultImages.TempoGateway,
+		Env:            proxy.ReadProxyVarsFromEnv(),
+		Args:           args,
+		Ports:          ports,
+		LivenessProbe:  gateway.LivenessProbe(false),
+		ReadinessProbe: gateway.ReadinessProbe(false),
+		VolumeMounts: []corev1.VolumeMount{
+			{
+				Name:      "gateway-rbac",
+				ReadOnly:  true,
+				MountPath: path.Join(gatewayMountDir, "rbac"),
+			},
+			{
+				Name:      "gateway-tenants",
+				ReadOnly:  true,
+				MountPath: path.Join(gatewayMountDir, "tenants"),
+			},
+		},
+		Resources:       ptr.Deref(opts.Tempo.Spec.Multitenancy.Resources, corev1.ResourceRequirements{}),
+		SecurityContext: manifestutils.TempoContainerSecurityContext(),
+	}
+
+	gatewayVolumes := []corev1.Volume{
+		{
+			Name: "gateway-rbac",
+			VolumeSource: corev1.VolumeSource{
+				ConfigMap: &corev1.ConfigMapVolumeSource{
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: naming.Name(manifestutils.GatewayComponentName, tempo.Name),
+					},
+					Items: []corev1.KeyToPath{
+						{
+							Key:  manifestutils.GatewayRBACFileName,
+							Path: manifestutils.GatewayRBACFileName,
+						},
+					},
+				},
+			},
+		},
+		{
+			Name: "gateway-tenants",
+			VolumeSource: corev1.VolumeSource{
+				Secret: &corev1.SecretVolumeSource{
+					SecretName: naming.Name(manifestutils.GatewayComponentName, tempo.Name),
+					Items: []corev1.KeyToPath{
+						{
+							Key:  manifestutils.GatewayTenantFileName,
+							Path: manifestutils.GatewayTenantFileName,
+						},
+					},
+				},
+			},
+		},
+	}
+
+	sts.Spec.Template.Spec.Containers = append(sts.Spec.Template.Spec.Containers, gatewayContainer)
+	sts.Spec.Template.Spec.Volumes = append(sts.Spec.Template.Spec.Volumes, gatewayVolumes...)
+
+	if tempo.Spec.Multitenancy.TenantsSpec.Mode == v1alpha1.ModeOpenShift {
+		sts.Spec.Template.Spec.Containers = append(sts.Spec.Template.Spec.Containers, gateway.NewOpaContainer(opts.CtrlConfig, tempo.Spec.Multitenancy.TenantsSpec, opaPackage))
+	}
+
+	if opts.CtrlConfig.Gates.OpenShift.ServingCertsService {
+		err := manifestutils.MountCAConfigMap(&sts.Spec.Template.Spec, containerName, naming.ServingCABundleName(tempo.Name), servingCADir)
+		if err != nil {
+			return err
+		}
+
+		err = manifestutils.MountCertSecret(&sts.Spec.Template.Spec, containerName, naming.ServingCertName(manifestutils.TempoMonolithComponentName, tempo.Name), servingCertDir)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

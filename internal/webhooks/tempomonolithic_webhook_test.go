@@ -121,6 +121,59 @@ func TestMonolithicValidate(t *testing.T) {
 			errors:   field.ErrorList{},
 		},
 
+		// multitenancy
+		{
+			name: "OTLP/HTTP enabled and multi-tenancy enabled",
+			tempo: v1alpha1.TempoMonolithic{
+				Spec: v1alpha1.TempoMonolithicSpec{
+					Ingestion: &v1alpha1.MonolithicIngestionSpec{
+						OTLP: &v1alpha1.MonolithicIngestionOTLPSpec{
+							HTTP: &v1alpha1.MonolithicIngestionOTLPProtocolsHTTPSpec{
+								Enabled: true,
+							},
+						},
+					},
+					Multitenancy: &v1alpha1.MonolithicMultitenancySpec{
+						Enabled: true,
+						TenantsSpec: v1alpha1.TenantsSpec{
+							Authentication: []v1alpha1.AuthenticationSpec{{
+								TenantName: "abc",
+							}},
+						},
+					},
+				},
+			},
+			warnings: admission.Warnings{},
+			errors: field.ErrorList{field.Invalid(
+				field.NewPath("spec", "multitenancy", "enabled"),
+				true,
+				"OTLP/HTTP ingestion must be disabled to enable multi-tenancy",
+			)},
+		},
+		{
+			name: "multi-tenancy enabled, OpenShift mode, authorization set",
+			tempo: v1alpha1.TempoMonolithic{
+				Spec: v1alpha1.TempoMonolithicSpec{
+					Multitenancy: &v1alpha1.MonolithicMultitenancySpec{
+						Enabled: true,
+						TenantsSpec: v1alpha1.TenantsSpec{
+							Mode: v1alpha1.ModeOpenShift,
+							Authentication: []v1alpha1.AuthenticationSpec{{
+								TenantName: "abc",
+							}},
+							Authorization: &v1alpha1.AuthorizationSpec{},
+						},
+					},
+				},
+			},
+			warnings: admission.Warnings{},
+			errors: field.ErrorList{field.Invalid(
+				field.NewPath("spec", "multitenancy", "enabled"),
+				true,
+				"spec.tenants.authorization should not be defined in openshift mode",
+			)},
+		},
+
 		// observability
 		{
 			name: "serviceMonitors enabled but prometheusOperator feature gate not set",

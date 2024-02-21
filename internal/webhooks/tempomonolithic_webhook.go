@@ -72,7 +72,7 @@ func (v *monolithicValidator) validate(ctx context.Context, obj runtime.Object) 
 func (v *monolithicValidator) validateTempoMonolithic(ctx context.Context, tempo tempov1alpha1.TempoMonolithic) (admission.Warnings, field.ErrorList) {
 	// We do not modify the Kubernetes object in the defaulter webhook,
 	// but still apply some default values in-memory.
-	tempo.Default()
+	tempo.Default(v.ctrlConfig)
 
 	warnings := admission.Warnings{}
 	errors := field.ErrorList{}
@@ -84,6 +84,7 @@ func (v *monolithicValidator) validateTempoMonolithic(ctx context.Context, tempo
 	errors = append(errors, validateName(tempo.Name)...)
 	addValidationResults(v.validateStorage(ctx, tempo))
 	errors = append(errors, v.validateJaegerUI(tempo)...)
+	errors = append(errors, v.validateMultitenancy(tempo)...)
 	errors = append(errors, v.validateObservability(tempo)...)
 	warnings = append(warnings, v.validateExtraConfig(tempo)...)
 
@@ -128,6 +129,29 @@ func (v *monolithicValidator) validateJaegerUI(tempo tempov1alpha1.TempoMonolith
 			tempo.Spec.JaegerUI.Route.Enabled,
 			"the openshiftRoute feature gate must be enabled to create a route for Jaeger UI",
 		)}
+	}
+
+	return nil
+}
+
+func (v *monolithicValidator) validateMultitenancy(tempo tempov1alpha1.TempoMonolithic) field.ErrorList {
+	if !tempo.Spec.Multitenancy.IsGatewayEnabled() {
+		return nil
+	}
+
+	multitenancyBase := field.NewPath("spec", "multitenancy")
+	if tempo.Spec.Ingestion != nil && tempo.Spec.Ingestion.OTLP != nil &&
+		tempo.Spec.Ingestion.OTLP.HTTP != nil && tempo.Spec.Ingestion.OTLP.HTTP.Enabled {
+		return field.ErrorList{field.Invalid(
+			multitenancyBase.Child("enabled"),
+			tempo.Spec.Multitenancy.Enabled,
+			"OTLP/HTTP ingestion must be disabled to enable multi-tenancy",
+		)}
+	}
+
+	err := ValidateTenantConfigs(&tempo.Spec.Multitenancy.TenantsSpec, tempo.Spec.Multitenancy.IsGatewayEnabled())
+	if err != nil {
+		return field.ErrorList{field.Invalid(multitenancyBase.Child("enabled"), tempo.Spec.Multitenancy.Enabled, err.Error())}
 	}
 
 	return nil

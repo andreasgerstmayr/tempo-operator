@@ -107,18 +107,67 @@ func TestBuildTempoService(t *testing.T) {
 				},
 				{
 					Name:       "jaeger-grpc",
+					Protocol:   corev1.ProtocolTCP,
 					Port:       16685,
 					TargetPort: intstr.FromString("jaeger-grpc"),
 				},
 				{
 					Name:       "jaeger-ui",
+					Protocol:   corev1.ProtocolTCP,
 					Port:       16686,
 					TargetPort: intstr.FromString("jaeger-ui"),
 				},
 				{
 					Name:       "jaeger-metrics",
+					Protocol:   corev1.ProtocolTCP,
 					Port:       16687,
 					TargetPort: intstr.FromString("jaeger-metrics"),
+				},
+			},
+		},
+		{
+			name: "enable OTLP/gRPC, gateway and JaegerUI",
+			input: v1alpha1.TempoMonolithicSpec{
+				Ingestion: &v1alpha1.MonolithicIngestionSpec{
+					OTLP: &v1alpha1.MonolithicIngestionOTLPSpec{
+						GRPC: &v1alpha1.MonolithicIngestionOTLPProtocolsGRPCSpec{
+							Enabled: true,
+						},
+					},
+				},
+				JaegerUI: &v1alpha1.MonolithicJaegerUISpec{
+					Enabled: true,
+				},
+				Multitenancy: &v1alpha1.MonolithicMultitenancySpec{
+					Enabled: true,
+					TenantsSpec: v1alpha1.TenantsSpec{
+						Authentication: []v1alpha1.AuthenticationSpec{
+							{
+								TenantName: "dev",
+								TenantID:   "dev",
+							},
+						},
+					},
+				},
+			},
+			expected: []corev1.ServicePort{
+				{
+					Name:       "http",
+					Protocol:   corev1.ProtocolTCP,
+					Port:       3200,
+					TargetPort: intstr.FromString("public"),
+				},
+				{
+					Name:       "otlp-grpc",
+					Protocol:   corev1.ProtocolTCP,
+					Port:       4317,
+					TargetPort: intstr.FromString("grpc-public"),
+				},
+				{
+					Name:       "jaeger-ui",
+					Protocol:   corev1.ProtocolTCP,
+					Port:       16686,
+					TargetPort: intstr.FromString("public"),
 				},
 			},
 		},
@@ -135,9 +184,10 @@ func TestBuildTempoService(t *testing.T) {
 					Kind:       "Service",
 				},
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      "tempo-sample",
-					Namespace: "default",
-					Labels:    labels,
+					Name:        "tempo-sample",
+					Namespace:   "default",
+					Labels:      labels,
+					Annotations: map[string]string{},
 				},
 				Spec: corev1.ServiceSpec{
 					Ports:    test.expected,

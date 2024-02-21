@@ -47,6 +47,8 @@ type tempoGCSConfig struct {
 }
 
 type tempoConfig struct {
+	MultitenancyEnabled bool `yaml:"multitenancy_enabled,omitempty"`
+
 	Server struct {
 		HttpListenPort int `yaml:"http_listen_port"`
 	} `yaml:"server"`
@@ -86,13 +88,14 @@ type tempoQueryConfig struct {
 }
 
 // BuildConfigMap creates the Tempo ConfigMap for a monolithic deployment.
-func BuildConfigMap(opts Options) (*corev1.ConfigMap, string, error) {
+func BuildConfigMap(opts Options) (*corev1.ConfigMap, map[string]string, error) {
 	tempo := opts.Tempo
-	labels := ComponentLabels(manifestutils.TempoMonolithComponentName, tempo.Name)
+	extraAnnotations := map[string]string{}
+	labels := ComponentLabels(manifestutils.TempoConfigName, tempo.Name)
 
 	tempoConfig, err := buildTempoConfig(opts)
 	if err != nil {
-		return nil, "", err
+		return nil, nil, err
 	}
 
 	configMap := &corev1.ConfigMap{
@@ -101,7 +104,7 @@ func BuildConfigMap(opts Options) (*corev1.ConfigMap, string, error) {
 			Kind:       "ConfigMap",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      naming.Name(manifestutils.TempoMonolithComponentName, tempo.Name),
+			Name:      naming.Name(manifestutils.TempoConfigName, tempo.Name),
 			Namespace: tempo.Namespace,
 			Labels:    labels,
 		},
@@ -111,17 +114,17 @@ func BuildConfigMap(opts Options) (*corev1.ConfigMap, string, error) {
 	}
 
 	h := sha256.Sum256(tempoConfig)
-	checksum := fmt.Sprintf("%x", h)
+	extraAnnotations["tempo.grafana.com/tempoConfig.hash"] = fmt.Sprintf("%x", h)
 
 	if tempo.Spec.JaegerUI != nil && tempo.Spec.JaegerUI.Enabled {
 		tempoQueryConfig, err := buildTempoQueryConfig()
 		if err != nil {
-			return nil, "", err
+			return nil, nil, err
 		}
 		configMap.Data["tempo-query.yaml"] = string(tempoQueryConfig)
 	}
 
-	return configMap, checksum, nil
+	return configMap, extraAnnotations, nil
 }
 
 func configureReceiverTLS(tlsSpec *v1alpha1.TLSSpec) tempoReceiverTLSConfig {
@@ -143,6 +146,7 @@ func buildTempoConfig(opts Options) ([]byte, error) {
 	tempo := opts.Tempo
 
 	config := tempoConfig{}
+	config.MultitenancyEnabled = tempo.Spec.Multitenancy != nil && tempo.Spec.Multitenancy.Enabled
 	config.Server.HttpListenPort = manifestutils.PortHTTPServer
 
 	if tempo.Spec.Storage != nil {
