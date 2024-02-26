@@ -31,7 +31,8 @@ func TestBuildGrafanaDatasource(t *testing.T) {
 			},
 		},
 	}
-	datasource := BuildGrafanaDatasource(opts)
+	datasource, err := BuildGrafanaDatasources(opts)
+	require.NoError(t, err)
 
 	labels := ComponentLabels("tempo", "sample")
 	require.Equal(t, &grafanav1.GrafanaDatasource{

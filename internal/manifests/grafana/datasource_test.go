@@ -19,9 +19,8 @@ func TestBuildGrafanaDatasource(t *testing.T) {
 		},
 		Spec: v1alpha1.TempoStackSpec{},
 	}})
-	labels := manifestutils.CommonLabels("test")
 
-	require.NotNil(t, datasource)
+	labels := manifestutils.CommonLabels("test")
 	require.Equal(t, &grafanav1.GrafanaDatasource{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "grafana.integreatly.org/v1beta1",
@@ -34,10 +33,11 @@ func TestBuildGrafanaDatasource(t *testing.T) {
 		},
 		Spec: grafanav1.GrafanaDatasourceSpec{
 			Datasource: &grafanav1.GrafanaDatasourceInternal{
-				Access: "proxy",
-				Name:   "test",
-				Type:   "tempo",
-				URL:    "http://tempo-test-query-frontend.tempo.svc.cluster.local:3200",
+				Access:         "proxy",
+				Name:           "test",
+				Type:           "tempo",
+				URL:            "http://tempo-test-query-frontend.tempo.svc.cluster.local:3200",
+				SecureJSONData: []byte("{}"),
 			},
 			InstanceSelector: &metav1.LabelSelector{},
 		},

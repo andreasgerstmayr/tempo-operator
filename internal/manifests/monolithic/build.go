@@ -81,7 +81,11 @@ func BuildAll(opts Options) ([]client.Object, error) {
 
 		if tempo.Spec.Observability.Grafana != nil &&
 			tempo.Spec.Observability.Grafana.DataSource != nil && tempo.Spec.Observability.Grafana.DataSource.Enabled {
-			manifests = append(manifests, BuildGrafanaDatasource(opts))
+			datasources, err := BuildGrafanaDatasources(opts)
+			if err != nil {
+				return nil, err
+			}
+			manifests = append(manifests, datasources...)
 		}
 	}
 
