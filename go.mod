@@ -29,17 +29,17 @@ require (
 	k8s.io/apimachinery v0.29.4
 	k8s.io/apiserver v0.29.4
 	k8s.io/client-go v0.29.4
-	k8s.io/klog/v2 v2.110.1
-	sigs.k8s.io/controller-runtime v0.16.3
+	k8s.io/klog/v2 v2.120.1
+	sigs.k8s.io/controller-runtime v0.17.2
 	sigs.k8s.io/yaml v1.4.0
 )
 
 require (
 	github.com/openshift/api v3.9.0+incompatible // release-4.14
-	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.71.2
+	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.73.1
 	github.com/stretchr/testify v1.9.0
 	gopkg.in/yaml.v3 v3.0.1
-	k8s.io/utils v0.0.0-20231127182322-b307cd553661
+	k8s.io/utils v0.0.0-20240310230437-4693a0247e57
 )
 
 require (
@@ -49,7 +49,7 @@ require (
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/emicklei/go-restful/v3 v3.11.0 // indirect
 	github.com/evanphx/json-patch v5.6.0+incompatible // indirect
-	github.com/evanphx/json-patch/v5 v5.6.0 // indirect
+	github.com/evanphx/json-patch/v5 v5.8.0 // indirect
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-openapi/jsonpointer v0.19.6 // indirect
