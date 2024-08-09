@@ -35,3 +35,11 @@ spec:
         name: verify-traces-http
     - podLogs:
         name: verify-traces-grpc
+    - podLogs:
+        selector: job-name=generate-traces-http
+    - podLogs:
+        selector: job-name=generate-traces-grpc
+    - podLogs:
+        selector: app.kubernetes.io/name=otelcol
+    - podLogs:
+        selector: app.kubernetes.io/name=tempo-monolithic
