@@ -17,7 +17,7 @@ jobs:
 
       - name: Sync fork
         env:
-          GH_TOKEN: testabc
+          GH_TOKEN: ""
           REPOSITORY_NAME: ${{ github.event.repository.name }}
         run: |
           # synchronizing the fork is fast, and avoids the need to fetch the full upstream repo
