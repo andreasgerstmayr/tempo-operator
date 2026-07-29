@@ -128,14 +128,13 @@ type tempoQueryConfig struct {
 }
 
 // BuildConfigMap creates the Tempo ConfigMap for a monolithic deployment.
-func BuildConfigMap(opts Options) (*corev1.ConfigMap, map[string]string, error) {
+func BuildConfigMap(opts Options) (*corev1.ConfigMap, string, error) {
 	tempo := opts.Tempo
-	extraAnnotations := map[string]string{}
 	labels := ComponentLabels(manifestutils.TempoConfigName, tempo.Name)
 
 	tempoConfig, err := buildTempoConfig(opts)
 	if err != nil {
-		return nil, nil, err
+		return nil, "", err
 	}
 
 	configMap := &corev1.ConfigMap{
@@ -154,19 +153,19 @@ func BuildConfigMap(opts Options) (*corev1.ConfigMap, map[string]string, error) 
 	}
 
 	h := sha256.Sum256(tempoConfig)
-	extraAnnotations["tempo.grafana.com/tempoConfig.hash"] = fmt.Sprintf("%x", h)
+	configChecksum := fmt.Sprintf("%x", h)
 
 	if tempo.Spec.JaegerUI != nil && tempo.Spec.JaegerUI.Enabled {
 
 		enableTLS := tempo.Spec.Multitenancy.IsGatewayEnabled() && opts.CtrlConfig.Gates.HTTPEncryption
 		tempoQueryConfig, err := buildTempoQueryConfig(tempo.Spec.JaegerUI, enableTLS, opts.TLSProfile)
 		if err != nil {
-			return nil, nil, err
+			return nil, "", err
 		}
 		configMap.Data["tempo-query.yaml"] = string(tempoQueryConfig)
 	}
 
-	return configMap, extraAnnotations, nil
+	return configMap, configChecksum, nil
 }
 
 func configureReceiverTLS(tlsSpec *v1alpha1.TLSSpec, tlsProfile tlsprofile.TLSProfileOptions, caCertDir, certDir string) tempoReceiverTLSConfig {

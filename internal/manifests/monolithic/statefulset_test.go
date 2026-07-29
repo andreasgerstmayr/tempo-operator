@@ -25,6 +25,8 @@ func TestStatefulsetMemoryStorage(t *testing.T) {
 				Tempo: "docker.io/grafana/tempo:x.y.z",
 			},
 		},
+		ConfigChecksum: "abc",
+		CertsHash:      "2025-11-17T10:00:00Z",
 		Tempo: v1alpha1.TempoMonolithic{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "sample",
@@ -56,7 +58,7 @@ func TestStatefulsetMemoryStorage(t *testing.T) {
 			},
 		},
 	}
-	sts, err := BuildTempoStatefulset(opts, map[string]string{"tempo.grafana.com/tempoConfig.hash": "abc"})
+	sts, err := BuildTempoStatefulset(opts, map[string]string{})
 	require.NoError(t, err)
 
 	labels := ComponentLabels(manifestutils.TempoMonolithComponentName, "sample")
@@ -86,7 +88,8 @@ func TestStatefulsetMemoryStorage(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: labels,
 					Annotations: map[string]string{
-						"tempo.grafana.com/tempoConfig.hash": "abc",
+						"tempo.grafana.com/config.hash":                "abc",
+						"tempo.grafana.com/certs.hash": "2025-11-17T10:00:00Z",
 					},
 				},
 				Spec: corev1.PodSpec{
@@ -188,6 +191,7 @@ func TestStatefulsetPVStorage(t *testing.T) {
 				Tempo: "docker.io/grafana/tempo:x.y.z",
 			},
 		},
+		CertsHash: "2025-11-17T10:00:00Z",
 		Tempo: v1alpha1.TempoMonolithic{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "sample",
@@ -256,6 +260,7 @@ func TestStatefulsetS3TLSStorage(t *testing.T) {
 				Tempo: "docker.io/grafana/tempo:x.y.z",
 			},
 		},
+		CertsHash: "2025-11-17T10:00:00Z",
 		Tempo: v1alpha1.TempoMonolithic{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "sample",
@@ -396,6 +401,7 @@ func TestStatefulsetReceiverTLS(t *testing.T) {
 				Tempo: "docker.io/grafana/tempo:x.y.z",
 			},
 		},
+		CertsHash: "2025-11-17T10:00:00Z",
 		Tempo: v1alpha1.TempoMonolithic{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "sample",
@@ -494,6 +500,7 @@ func TestStatefulsetPorts(t *testing.T) {
 				Tempo: "docker.io/grafana/tempo:x.y.z",
 			},
 		},
+		CertsHash: "2025-11-17T10:00:00Z",
 		Tempo: v1alpha1.TempoMonolithic{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "sample",
@@ -603,6 +610,7 @@ func TestStatefulsetSchedulingRules(t *testing.T) {
 				Tempo: "docker.io/grafana/tempo:x.y.z",
 			},
 		},
+		CertsHash: "2025-11-17T10:00:00Z",
 		Tempo: v1alpha1.TempoMonolithic{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "sample",
@@ -681,6 +689,7 @@ func TestStatefulsetCustomServiceAccount(t *testing.T) {
 				Tempo: "docker.io/grafana/tempo:x.y.z",
 			},
 		},
+		CertsHash: "2025-11-17T10:00:00Z",
 		Tempo: v1alpha1.TempoMonolithic{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "sample",
@@ -1376,6 +1385,7 @@ func TestStatefulsetCustomStorageClass(t *testing.T) {
 				Tempo: "docker.io/grafana/tempo:x.y.z",
 			},
 		},
+		CertsHash: "2025-11-17T10:00:00Z",
 		Tempo: v1alpha1.TempoMonolithic{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "sample",
@@ -1405,6 +1415,7 @@ func TestStatefulsetPodSecurityContext(t *testing.T) {
 				Tempo: "docker.io/grafana/tempo:x.y.z",
 			},
 		},
+		CertsHash: "2025-11-17T10:00:00Z",
 		Tempo: v1alpha1.TempoMonolithic{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "sample",

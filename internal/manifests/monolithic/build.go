@@ -48,13 +48,13 @@ func BuildAll(opts Options) ([]client.Object, error) {
 		}
 	}
 
-	configMap, annotations, err := BuildConfigMap(opts)
+	configMap, configChecksum, err := BuildConfigMap(opts)
 	if err != nil {
 		return nil, err
 	}
 
 	manifests = append(manifests, configMap)
-	maps.Copy(extraStsAnnotations, annotations)
+	opts.ConfigChecksum = configChecksum
 
 	var serviceAccount *corev1.ServiceAccount
 	if tempo.Spec.ServiceAccount == "" {

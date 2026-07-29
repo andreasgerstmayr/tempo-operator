@@ -1,9 +1,12 @@
 package certrotation
 
 import (
+	"crypto/sha256"
 	"fmt"
+	"sort"
 	"time"
 
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apiserver/pkg/authentication/user"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -37,6 +40,20 @@ func BuildAll(opts Options) ([]client.Object, error) {
 	res = append(res, objs...)
 
 	return res, nil
+}
+
+// CertsHash computes a SHA-256 hash of all TLS certificate data
+// from the given objects. The hash changes whenever any certificate
+// is rotated.
+func CertsHash(objects []client.Object) string {
+	sort.Slice(objects, func(i, j int) bool { return objects[i].GetName() < objects[j].GetName() })
+	h := sha256.New()
+	for _, obj := range objects {
+		if s, ok := obj.(*corev1.Secret); ok && s.Type == corev1.SecretTypeTLS {
+			h.Write(s.Data[corev1.TLSCertKey])
+		}
+	}
+	return fmt.Sprintf("%x", h.Sum(nil))
 }
 
 // ApplyDefaultSettings merges the default options with the ones we give.

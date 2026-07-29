@@ -125,7 +125,7 @@ func (r *certificateRotation) SetAnnotations(cert *crypto.TLSCertificateConfig, 
 	annotations[CertificateNotBeforeAnnotation] = cert.Certs[0].NotBefore.Format(time.RFC3339)
 	annotations[CertificateIssuer] = cert.Certs[0].Issuer.CommonName
 	// List does a sort so that we have a consistent representation
-	annotations[CertificateHostnames] = strings.Join(hostnames.UnsortedList(), ",")
+	annotations[CertificateHostnames] = strings.Join(sets.List[string](hostnames), ",")
 }
 
 func needNewCertificate(annotations map[string]string, clock clockFunc, refresh time.Duration, signer *crypto.CA) string {

@@ -3,6 +3,7 @@ package monolithic
 import (
 	"errors"
 	"fmt"
+	"maps"
 	"path"
 
 	"github.com/operator-framework/operator-lib/proxy"
@@ -28,8 +29,8 @@ var (
 func BuildTempoStatefulset(opts Options, extraAnnotations map[string]string) (*appsv1.StatefulSet, error) {
 	tempo := opts.Tempo
 	labels := ComponentLabels(manifestutils.TempoMonolithComponentName, tempo.Name)
-	annotations := manifestutils.StorageSecretHash(opts.StorageParams, extraAnnotations)
-	annotations = manifestutils.AddCertificateHashAnnotations(tempo.GetAnnotations(), annotations)
+	annotations := CommonAnnotations(opts)
+	maps.Copy(annotations, extraAnnotations)
 
 	sts := &appsv1.StatefulSet{
 		TypeMeta: metav1.TypeMeta{

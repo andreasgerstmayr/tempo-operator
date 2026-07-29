@@ -50,13 +50,11 @@ func TestBuildConfigMap(t *testing.T) {
 		},
 	}
 
-	cm, annotations, err := BuildConfigMap(opts)
+	cm, configChecksum, err := BuildConfigMap(opts)
 	require.NoError(t, err)
 	require.NotNil(t, cm.Data)
 	require.NotNil(t, cm.Data["tempo.yaml"])
-	require.Equal(t, map[string]string{
-		"tempo.grafana.com/tempoConfig.hash": fmt.Sprintf("%x", sha256.Sum256([]byte(cm.Data["tempo.yaml"]))),
-	}, annotations)
+	require.Equal(t, fmt.Sprintf("%x", sha256.Sum256([]byte(cm.Data["tempo.yaml"]))), configChecksum)
 
 	require.NotNil(t, cm.Data["tempo-query.yaml"])
 	tempoQueryCfg := `

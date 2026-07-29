@@ -23,6 +23,7 @@ import (
 
 	configv1alpha1 "github.com/grafana/tempo-operator/api/config/v1alpha1"
 	"github.com/grafana/tempo-operator/api/tempo/v1alpha1"
+	"github.com/grafana/tempo-operator/internal/manifests/manifestutils"
 	"github.com/grafana/tempo-operator/internal/status"
 	"github.com/grafana/tempo-operator/internal/version"
 )
@@ -1101,7 +1102,11 @@ func TestReconcileManifestsValidateModes(t *testing.T) {
 			err := k8sClient.Update(context.Background(), tempo)
 			require.NoError(t, err)
 			reconciler := TempoStackReconciler{Client: k8sClient, Scheme: testScheme}
-			err = reconciler.createOrUpdate(context.Background(), *tempo)
+			params := manifestutils.Params{
+				Tempo:      *tempo,
+				CtrlConfig: reconciler.CtrlConfig,
+			}
+			err = reconciler.createOrUpdate(context.Background(), params)
 			tc.validate(t, err)
 		})
 	}

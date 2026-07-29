@@ -19,14 +19,19 @@ var (
 	hashSeparator     = []byte(",")
 )
 
-func getSecret(ctx context.Context, client client.Client, namespace string, secretName string, path *field.Path) (corev1.Secret, field.ErrorList) {
+func getSecret(ctx context.Context, client client.Client, namespace string, secretName string, path *field.Path) (corev1.Secret, string, field.ErrorList) {
 	var storageSecret corev1.Secret
 	err := client.Get(ctx, types.NamespacedName{Namespace: namespace, Name: secretName}, &storageSecret)
 	if err != nil {
-		return corev1.Secret{}, field.ErrorList{field.Invalid(path, secretName, fmt.Sprintf("%s: %v. Tempo will start once the storage secret is available", ErrFetchingSecret, err))}
+		return corev1.Secret{}, "", field.ErrorList{field.Invalid(path, secretName, fmt.Sprintf("%s: %v. Tempo will start once the storage secret is available", ErrFetchingSecret, err))}
 	}
 
-	return storageSecret, nil
+	hash, err := hashSecretData(&storageSecret)
+	if err != nil {
+		return corev1.Secret{}, "", field.ErrorList{field.Invalid(path, secretName, fmt.Sprintf("could not hash storage secret: %v", err))}
+	}
+
+	return storageSecret, hash, nil
 }
 
 func ensureNotEmpty(storageSecret corev1.Secret, fields []string, path *field.Path) field.ErrorList {

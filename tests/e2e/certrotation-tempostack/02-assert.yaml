@@ -1,0 +1,41 @@
+# Deleting a cert secret triggers cert regeneration with new certificate data,
+# which changes the certs hash annotation and triggers a rollout.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tempo-simplest-compactor
+  generation: 2
+status:
+  readyReplicas: 1
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tempo-simplest-distributor
+  generation: 2
+status:
+  readyReplicas: 1
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: tempo-simplest-ingester
+  generation: 2
+status:
+  readyReplicas: 1
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tempo-simplest-querier
+  generation: 2
+status:
+  readyReplicas: 1
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tempo-simplest-query-frontend
+  generation: 2
+status:
+  readyReplicas: 1

@@ -27,12 +27,8 @@ import (
 	"github.com/grafana/tempo-operator/internal/tlsprofile"
 )
 
-func (r *TempoStackReconciler) createOrUpdate(ctx context.Context, tempo v1alpha1.TempoStack) error {
-	params := manifestutils.Params{
-		Tempo:      tempo,
-		CtrlConfig: r.CtrlConfig,
-	}
-
+func (r *TempoStackReconciler) createOrUpdate(ctx context.Context, params manifestutils.Params) error {
+	tempo := params.Tempo
 	tokenCCOAuthEnv := cloudcredentials.DiscoverTokenCCOAuthConfig()
 
 	// We can use this before inferred, as COO mode cannot be inferred and need to be set explicit

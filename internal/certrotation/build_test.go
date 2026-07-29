@@ -34,6 +34,7 @@ func TestBuildAll(t *testing.T) {
 
 	objs, err := BuildAll(opts)
 	require.NoError(t, err)
+	require.NotEmpty(t, CertsHash(objs))
 	require.Len(t, objs, 9)
 
 	for _, obj := range objs {

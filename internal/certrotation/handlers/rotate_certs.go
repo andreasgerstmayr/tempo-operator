@@ -7,12 +7,8 @@ import (
 	"github.com/ViaQ/logerr/v2/kverrors"
 	"github.com/go-logr/logr"
 
-	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/client-go/util/retry"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	ctrlutil "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -21,40 +17,38 @@ import (
 	v1alpha1 "github.com/grafana/tempo-operator/api/tempo/v1alpha1"
 	"github.com/grafana/tempo-operator/internal/certrotation"
 	"github.com/grafana/tempo-operator/internal/manifests"
-	"github.com/grafana/tempo-operator/internal/manifests/manifestutils"
 )
 
 // CreateOrRotateCertificates handles the TempoStack client and serving certificate creation and rotation
-// including the signing CA and a ca bundle or else returns an error. It returns only a degrade-condition-worthy
-// error if building the manifests fails for any reason.
+// including the signing CA and a ca bundle or else returns an error. It returns a hash of all generated
+// certificates (to trigger pod restarts on rotation) and a degrade-condition-worthy error if building
+// the manifests fails for any reason.
 func CreateOrRotateCertificates(ctx context.Context, log logr.Logger,
-	req ctrl.Request, k client.Client, s *runtime.Scheme, fg configv1alpha1.FeatureGates, cs map[string]string) error {
+	req ctrl.Request, k client.Client, s *runtime.Scheme, fg configv1alpha1.FeatureGates, cs map[string]string) (string, error) {
 	ll := log.WithValues("tempostacks", req.String(), "event", "createOrRotateCerts")
 	var stack v1alpha1.TempoStack
 	if err := k.Get(ctx, req.NamespacedName, &stack); err != nil {
 		if apierrors.IsNotFound(err) {
-			// maybe the user deleted it before we could react? Either way this isn't an issue
 			ll.Error(err, "could not find the requested tempo tempostacks", "name", req.String())
-			return nil
+			return "", nil
 		}
-		return kverrors.Wrap(err, "failed to lookup tempostacks", "name", req.String())
+		return "", kverrors.Wrap(err, "failed to lookup tempostacks", "name", req.String())
 	}
 
 	opts, err := GetOptions(ctx, k, req, cs)
 	if err != nil {
-		return kverrors.Wrap(err, "failed to lookup certificates secrets", "name", req.String())
+		return "", kverrors.Wrap(err, "failed to lookup certificates secrets", "name", req.String())
 	}
 
 	if optErr := certrotation.ApplyDefaultSettings(&opts, fg.BuiltInCertManagement, certrotation.TempoStackComponentCertSecretNames(opts.StackName)); optErr != nil {
 		ll.Error(optErr, "failed to conform options to build settings")
-		return kverrors.Wrap(err, "failed to conform options to build settings", "name", req.String())
+		return "", kverrors.Wrap(err, "failed to conform options to build settings", "name", req.String())
 	}
 
 	objects, err := certrotation.BuildAll(opts)
-
 	if err != nil {
 		ll.Error(err, "failed to build certificate manifests")
-		return kverrors.Wrap(err, "failed to build certificate manifests", "name", req.String())
+		return "", kverrors.Wrap(err, "failed to build certificate manifests", "name", req.String())
 	}
 
 	ll.V(1).Info("certificate manifests built", "count", len(objects))
@@ -98,34 +92,8 @@ func CreateOrRotateCertificates(ctx context.Context, log logr.Logger,
 	}
 
 	if errCount > 0 {
-		return kverrors.New("failed to create or rotate TempoStack certificates", "name", req.String())
+		return "", kverrors.New("failed to create or rotate TempoStack certificates", "name", req.String())
 	}
 
-	// Add certificate hash annotations to trigger pod restart after successful certificate rotation
-	if err := addCertificateHashAnnotations(ctx, k, &stack, opts); err != nil {
-		ll.Error(err, "failed to add certificate hash annotations after certificate rotation")
-		return kverrors.Wrap(err, "failed to add certificate hash annotations", "name", req.String())
-	}
-
-	ll.Info("certificate rotation completed successfully, hash annotations added")
-	return nil
-}
-
-// addCertificateHashAnnotations adds certificate hash annotations to trigger pod restart after certificate rotation.
-func addCertificateHashAnnotations(ctx context.Context, k client.Client, stack *v1alpha1.TempoStack, opts certrotation.Options) error {
-	certSecrets := make(map[string]*corev1.Secret, len(opts.Certificates))
-	for name, cert := range opts.Certificates {
-		certSecrets[name] = cert.Secret
-	}
-
-	hashAnnotations := manifestutils.CertificateHashAnnotations(certSecrets)
-
-	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
-		current := &v1alpha1.TempoStack{}
-		if err := k.Get(ctx, types.NamespacedName{Name: stack.Name, Namespace: stack.Namespace}, current); err != nil {
-			return err
-		}
-		current.Annotations = labels.Merge(current.Annotations, hashAnnotations)
-		return k.Update(ctx, current)
-	})
+	return certrotation.CertsHash(objects), nil
 }

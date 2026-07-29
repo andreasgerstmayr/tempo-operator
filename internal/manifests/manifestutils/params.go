@@ -18,6 +18,7 @@ type KubeAPIServerInfo struct {
 type Params struct {
 	StorageParams       StorageParams
 	ConfigChecksum      string
+	CertsHash           string
 	Tempo               v1alpha1.TempoStack
 	CtrlConfig          configv1alpha1.ProjectConfig
 	TLSProfile          tlsprofile.TLSProfileOptions
@@ -31,6 +32,7 @@ type StorageParams struct {
 	AzureStorage     *AzureStorage
 	GCS              *GCS
 	S3               *S3
+	SecretHash       string
 	CredentialMode   v1alpha1.CredentialMode
 	CloudCredentials CloudCredentials
 }
